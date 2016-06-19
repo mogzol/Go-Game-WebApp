@@ -5,6 +5,8 @@
  * -------- SET UP MODULES/VARS
  */
 
+"use strict";
+
 // Set up express
 var express = require('express');
 var app = express();

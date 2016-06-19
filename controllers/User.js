@@ -1,3 +1,5 @@
+"use strict";
+
 var userDb = 'user';
 
 module.exports = class User
