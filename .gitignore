@@ -1,3 +1,6 @@
+# Ignore JetBrains IDE folders (Php/WebStorm, IntelliJ, etc.)
+.idea
+
 # Logs
 logs
 *.log

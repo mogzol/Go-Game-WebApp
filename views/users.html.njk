@@ -1,0 +1,93 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<h1>{{ header }}</h1>
+		<p class="lead">
+			This is a demo page
+		</p>
+	</div>
+
+	{# Bootstrap uses a grid system, you can arrange things in rows #}
+	<div class="row">
+		{# And then rows have columns. 12 columns per row. #}
+		{# Note that you can define different columns/offsets for different screen sizes, here we are defining
+		   for medium (and larger) screens (with -md-) and small (and larger) screens (with -sm-) #}
+		<div class="col-md-8">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Current Users
+				</div>
+				<div class="panel-body">
+					<table class="table table-bordered table-striped">
+						<thead>
+							<tr>
+								<th>Username</th>
+								<th>Password</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for user in users %}
+								<tr>
+									<td>{{ user.username }}</td>
+									<td>{{ user.password }}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-4">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-info">
+						<div class="panel-heading">
+							Add a User
+						</div>
+						<div class="panel-body">
+							{# This form is for adding new users #}
+							<form action="/addUser" method="POST" role="form">
+								{# We are using Cross Site Request Forgery (CSRF) protection here #}
+								<input type="hidden" name="_csrf" value="{{csrfToken}}">
+
+								<div class="form-group">
+									<label for="username">Username:</label>
+									<input type="text" class="form-control" id="username" name="username">
+								</div>
+
+								<div class="form-group">
+									<label for="password">Password:</label>
+									<input type="password" class="form-control" id="password" name="password">
+								</div>
+
+								<button type="submit" class="btn btn-success">Add User</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-danger">
+						<div class="panel-heading">
+							Remove All Users
+						</div>
+						<div class="panel-body">
+							{# This form is for adding new users #}
+							<form action="/removeUsers" method="POST" role="form">
+								{# We are using Cross Site Request Forgery (CSRF) protection here #}
+								<input type="hidden" name="_csrf" value="{{csrfToken}}">
+
+								<button type="submit" class="btn btn-danger">Remove All Users</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{
+  "name": "go-webapp",
+  "version": "1.0.0",
+  "description": "Go Web Application for SENG 299",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SENG-299-Group-6-Summer16/Go-WebApp.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SENG-299-Group-6-Summer16/Go-WebApp/issues"
+  },
+  "homepage": "https://github.com/SENG-299-Group-6-Summer16/Go-WebApp#readme",
+  "dependencies": {
+    "auto-loader": "^0.2.0",
+    "body-parser": "^1.15.1",
+    "connect-flash": "^0.1.1",
+    "csurf": "^1.9.0",
+    "express": "^4.14.0",
+    "express-session": "^1.13.0",
+    "mongojs": "^2.4.0",
+    "nunjucks": "^2.4.2"
+  }
+}
