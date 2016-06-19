@@ -19,7 +19,7 @@ The `server.js` file is where the server is set up, and all the modules and rout
 
 The actual logic for the pages is handled by the controllers in the `controllers` folder. Controllers are auto-loaded, so after adding a new controller js file, it should just work without having to do anything in `server.js` (other than setting up the routes).
 
-The pages themselves are located in the `views` folder. As mentioned earlier, these are Nunjuck templates. All of our pages should extend the `base.html.njk` file.
+The pages themselves are located in the `views` folder. As mentioned earlier, these are Nunjuck templates. All of our pages should extend the `base.html.njk` file.  
 Nunjuck templates are basically just HTML with some extra features, you can read about how to write them here: https://mozilla.github.io/nunjucks/templating.html.
 
 Any static content (such as javascript/css libraries) is located in the `public` folder.
@@ -27,17 +27,17 @@ Any static content (such as javascript/css libraries) is located in the `public`
 ### Committing
 When committing **make sure** you don't commit any files that are not strictly part of this project, such as editor specific files (the JetBrains editor's `.idea` folder has already been added to the gitignore). Also make sure not to commit the `node_modules` folder (again, it has already been added to the gitignore, so it would be pretty hard to do this by accident).
 
-When writing commit messages, please follow the guidelines set here: http://chris.beams.io/posts/git-commit/
+When writing commit messages, please follow the guidelines set here: http://chris.beams.io/posts/git-commit/  
 Really, please read that, it's worth it.
 
 ### Dependencies
 Here are the links to the pages for all the dependencies we are currently using, use them if you are unsure on how to use something.
 
-**auto-loader**: https://github.com/jwerle/node-auto-loader
-**body-parser**: https://github.com/expressjs/body-parser
-**connect-flash**: https://github.com/jaredhanson/connect-flash
-**csurf**: https://github.com/expressjs/csurf
-**express**: http://expressjs.com/en/4x/api.html
-**express-session**: https://github.com/expressjs/session
-**mongojs**: https://github.com/mafintosh/mongojs
-**nunjucks**: http://mozilla.github.io/nunjucks/
+**auto-loader**: https://github.com/jwerle/node-auto-loader  
+**body-parser**: https://github.com/expressjs/body-parser  
+**connect-flash**: https://github.com/jaredhanson/connect-flash  
+**csurf**: https://github.com/expressjs/csurf  
+**express**: http://expressjs.com/en/4x/api.html  
+**express-session**: https://github.com/expressjs/session  
+**mongojs**: https://github.com/mafintosh/mongojs  
+**nunjucks**: http://mozilla.github.io/nunjucks/  
