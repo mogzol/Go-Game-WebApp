@@ -30,6 +30,34 @@ When committing **make sure** you don't commit any files that are not strictly p
 When writing commit messages, please follow the guidelines set here: http://chris.beams.io/posts/git-commit/  
 Really, please read that, it's worth it.
 
+### Code Formatting
+Indent with tabs not spaces. Class and function declarations should have curly braces on a new line, unless they are being declared inline:
+
+```javascript
+function exampleFunc(arg1, arg2)
+{
+	// function code
+}
+
+thingWithCallback(arg, function() {
+	// inline function code
+});
+```
+
+All other blocks should have curly braces on the same line. Blocks with a single line of code in them do not need curly braces, but they should include a line break after the statement and condition:
+
+```javascript
+if (condition) {
+	// some code
+	// some more code
+}
+
+while (condition)
+	// single line of code
+```
+
+Finally, make sure to add a blank line at the end of every file, or else Git diffs will include an annoying 'no blank line' message.
+
 ### Dependencies
 Here are the links to the pages for all the dependencies we are currently using, use them if you are unsure on how to use something.
 
