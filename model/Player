@@ -1,0 +1,120 @@
+'user strict'
+
+var play_Time;      //Play Time in Seconds
+var running_Date;   //ongoing date
+var game_Results;   //Win or Loss?
+
+class Player{
+
+
+    constructor(name, date, isAI)
+    {
+        this._player = name;
+        this._startDate = date || Date.now();
+        this._isAI = isAI || false;
+        this._score = -1;
+        this._captured = -1;
+        this._pass = false;
+    }
+    getStartDate()
+    {
+        return this._startDate;
+    }
+    /**
+     * setPlayerTme()
+     * Keeps track of the time played
+     * Updates the global variable play_Time
+     * Updates the attribute this._date to current date
+     */
+    setPlayTime()
+    {
+        var start_Point =  running_Date || this._startDate;
+        var end_Point = Date.now();
+
+        play_Time += (end_Point - start_Point) / 1000;
+        running_Date = Date.now();
+    }
+
+    /**
+     * getPlayTime()
+     * Returns player tim in seconds
+     * @returns {*| integer}
+     */
+    getPlayTime()
+    {
+        return play_Time;
+    }
+
+    /**
+     * isAI()
+     * Checks player object if AI
+     * @returns {*|boolean}
+     */
+    isAI()
+    {
+        return this._isAI;
+    }
+
+    /**
+     * setScore( score )
+     * @param score {integer} the score to set
+     */
+    setScore( score )
+    {
+        this._score = score;
+    }
+
+    /**
+     * getScore()
+     * @returns {*| integer} Returns player score
+     */
+    getScore()
+    {
+        return this._score;
+    }
+
+    /**
+     * setCaptured( cap )
+     * @param cap {token} Updates player captured
+     */
+    setCaptured( cap )
+    {
+        this._captured= cap;
+    }
+
+    /**
+     * getCaptured()
+     * @returns {*|token} Returns player captured
+     */
+    getCaptured()
+    {
+        return this._captured;
+    }
+
+    /**
+     *setPass()
+     *Updates player object to pass on turn
+     */
+    setPass()
+    {
+        this._pass = true;
+    }
+
+    /**
+     * getPass()
+     * @returns {boolean} Checks if player wants to pass on turn
+     */
+    getPass()
+    {
+        return this._pass; //boolean
+    }
+    setResults( result )
+    {
+        game_Results = result; 
+    }
+    getResults()
+    {
+        return game_Results;
+    }
+
+}
