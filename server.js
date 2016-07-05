@@ -40,7 +40,7 @@ env.addFilter('empty', function(object) { // Needed a way to check if an object 
 
 // Set up mongojs (like mongodb but cleaner code)
 var mongojs = require('mongojs');
-var db = mongojs('localhost:27017/go-app');
+var db = mongojs('localhost:27017/goApp');
 
 // Set up body-parser (for form data reading)
 var bodyParser = require('body-parser');
@@ -48,6 +48,9 @@ var parseForm = bodyParser.urlencoded({extended: false});
 
 // Load all our controllers
 var controllers = require('auto-loader').load(__dirname + '/controllers');
+
+// Load our routes
+var routes = require('./routes.js');
 
 // The port we will run on
 var port = 3000;
@@ -58,6 +61,7 @@ var port = 3000;
  */
 app.use(function(request, response, next) {
 	env.addGlobal('flashes', request.flash());
+	env.addGlobal('routes', routes);
 	next();
 });
 
@@ -69,21 +73,47 @@ app.use(function(request, response, next) {
 // Serve the static content (libraries, etc.)
 app.use(express.static('public'));
 
-// Base route. Right now this is a user list
-app.get('/', csrfProtection, function(request, response) {
-	controllers.User.indexAction(request, response, db);
+
+
+
+// Base route. Right now this is just the base page
+app.get(routes.home, csrfProtection, function(request, response) {
+	response.render('views/base.html.njk');
 });
 
-// Add user POST request
-app.post('/addUser', parseForm, csrfProtection, function(request, response) {
-	controllers.User.addUserAction(request, response, db);
+
+
+// Admin page. Right now anyone can access it (bad shit)
+app.get(routes.admin, csrfProtection, function(request, response) {
+	controllers.Admin.indexAction(request, response, db);
+});
+
+// Admin page. Right now anyone can access it (bad shit)
+app.post(routes.adminCreateAccount, csrfProtection, function(request, response) {
+	controllers.Admin.createAccountAction(request, response, db);
 });
 
 // Remove all users POST request
-app.post('/removeUsers', parseForm, csrfProtection, function(request, response) {
-	controllers.User.removeUsersAction(request, response, db);
+app.post(routes.removeAllAccounts, parseForm, csrfProtection, function(request, response) {
+	controllers.Admin.removeUsersAction(request, response, db);
 });
 
+
+
+// Login page
+app.get(routes.login, csrfProtection, function(request, response) {
+	controllers.Login.indexAction(request, response, db);
+});
+
+// Login POST request
+app.post(routes.login, parseForm, csrfProtection, function(request, response) {
+	controllers.Login.loginAction(request, response, db);
+});
+
+// Add user POST request
+app.post(routes.createAccount, parseForm, csrfProtection, function(request, response) {
+	controllers.Login.addAccountAction(request, response, db);
+});
 
 /*
  * -------- ERROR HANDLING

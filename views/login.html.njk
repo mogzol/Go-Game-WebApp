@@ -1,0 +1,78 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<h1>Log in</h1>
+		<p class="lead">
+			Fill out the form below to log in
+		</p>
+	</div>
+
+	<div class="row">
+		<div class="col-md-6 col-md-offset-3">
+			<div class="panel panel-primary">
+				<div class="panel-heading">Log In</div>
+				<div class="panel-body">
+					<form action="{{ routes.login }}" method="POST" role="form" id="register_form">
+						<input type="hidden" name="_csrf" value="{{csrfToken}}">
+						<p>Don't have an account? <a href="javascript:void(0)" id="create">Create one.</a></p>
+
+						<div class="form-group">
+							<label for="username">Username:</label>
+							<input type="text" class="form-control" id="username" name="username">
+						</div>
+
+						<div class="form-group">
+							<label for="password">Password:</label>
+							<input type="password" class="form-control" id="password" name="password">
+							<p class="help-block text-danger register-hide" style="display:none">
+								<span class="glyphicon glyphicon-alert"></span> WARNING: This is an <strong>insecure</strong> connection. Do not use a password that you use elsewhere.
+							</p>
+						</div>
+
+						<div class="register-hide" style="display:none">
+							<div class="form-group">
+								<label for="password_conf">Confirm Password:</label>
+								<input type="password" class="form-control" id="password_conf" name="password_conf">
+							</div>
+
+							<div class="form-group">
+								<label for="email">Email:</label>
+								<input type="text" class="form-control" id="email" name="email">
+								<p class="help-block">This will only be used for resetting your password.</p>
+							</div>
+						</div>
+
+						<button type="submit" class="btn btn-success">Log In</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block javascript %}
+	<script>
+		$(document).on('ready', function() {
+			var $create = $('#create');
+			var $register = $('.register-hide');
+			var $registerForm = $('#register_form');
+
+			$create.on('click', function() {
+				if ($register.is(':visible')) {
+					$registerForm.attr('action', '{{ routes.login }}');
+					$create.text('Create one.');
+					$register.slideUp('fast');
+					$('button[type="submit"]').text('Log In');
+				} else {
+					$registerForm.attr('action', '{{ routes.createAccount }}');
+					$create.text('Cancel.');
+					$register.slideDown('fast');
+					$('button[type="submit"]').text('Create Account');
+				}
+			});
+		});
+	</script>
+{% endblock %}

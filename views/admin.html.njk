@@ -4,9 +4,9 @@
 
 {% block content %}
 	<div class="page-header">
-		<h1>{{ header }}</h1>
+		<h1>Admin Page</h1>
 		<p class="lead">
-			This is a demo page
+			This is a bad admin page. It requires no authentication.
 		</p>
 	</div>
 
@@ -50,7 +50,7 @@
 						</div>
 						<div class="panel-body">
 							{# This form is for adding new users #}
-							<form action="/addUser" method="POST" role="form">
+							<form action="{{ routes.adminCreateAccount }}" method="POST" role="form">
 								{# We are using Cross Site Request Forgery (CSRF) protection here #}
 								<input type="hidden" name="_csrf" value="{{csrfToken}}">
 
@@ -78,7 +78,7 @@
 						</div>
 						<div class="panel-body">
 							{# This form is for adding new users #}
-							<form action="/removeUsers" method="POST" role="form">
+							<form action="{{ routes.removeAllAccounts }}" method="POST" role="form">
 								{# We are using Cross Site Request Forgery (CSRF) protection here #}
 								<input type="hidden" name="_csrf" value="{{csrfToken}}">
 

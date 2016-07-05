@@ -62,6 +62,7 @@ Finally, make sure to add a blank line at the end of every file, or else Git dif
 Here are the links to the pages for all the dependencies we are currently using, use them if you are unsure on how to use something.
 
 **auto-loader**: https://github.com/jwerle/node-auto-loader  
+**bcrypt**: https://github.com/dcodeIO/bcrypt.js  
 **body-parser**: https://github.com/expressjs/body-parser  
 **connect-flash**: https://github.com/jaredhanson/connect-flash  
 **csurf**: https://github.com/expressjs/csurf  
