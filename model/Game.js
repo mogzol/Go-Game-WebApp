@@ -166,7 +166,7 @@ class Game{
         {
             this._playerWhite.setScore( 400 );
             this._playerWhite.setResult(0); //lost
-            var skillWhite= (this._playerWhite.getScore() + this._playerWhite.getCaptured()) * (this._playerWhite.getPlayTime() / totalGameTime + );
+            var skillWhite= (this._playerWhite.getScore() + this._playerWhite.getCaptured()) * (this._playerWhite.getPlayTime() / totalGameTime);
             this._playerWhite.setSkill(skillWhite);
         }
     }
