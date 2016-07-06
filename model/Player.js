@@ -1,20 +1,29 @@
-'user strict'
+"use strict"
 
-var play_Time;      //Play Time in Seconds
-var running_Date;   //ongoing date
-var game_Results;   //Win or Loss?
-
+var playTime;        //Play Time in Seconds
+var gameResult;     //Win or Loss?
+var playerHistory;   //Player's Moves
+var gameSkillLevel;
 class Player{
 
-
-    constructor(name, date, isAI)
+    constructor(name, color, isAI)
     {
         this._player = name;
-        this._startDate = date || Date.now();
+        this._startDate= Date.now();
+        this._runningDate= Date.now();
+        this._color = color;
         this._isAI = isAI || false;
         this._score = -1;
         this._captured = -1;
         this._pass = false;
+    }
+    getColor()
+    {
+        return this._color;    
+    }
+    getName()
+    {
+        return this._player;   
     }
     getStartDate()
     {
@@ -26,13 +35,13 @@ class Player{
      * Updates the global variable play_Time
      * Updates the attribute this._date to current date
      */
-    setPlayTime()
+    startTimer()
     {
-        var start_Point =  running_Date || this._startDate;
-        var end_Point = Date.now();
+        var startPoint =  this._runningDate();
+        var endPoint = Date.now();
 
-        play_Time += (end_Point - start_Point) / 1000;
-        running_Date = Date.now();
+        playTime += (endPoint - startPoint) / 1000;
+        this._runningDate = Date.now();
     }
 
     /**
@@ -42,7 +51,7 @@ class Player{
      */
     getPlayTime()
     {
-        return play_Time;
+        return playTime;
     }
 
     /**
@@ -106,15 +115,42 @@ class Player{
      */
     getPass()
     {
-        return this._pass; //boolean
+        return this._pass;
     }
-    setResults( result )
+    /**
+     * stores all the moves the player made
+     */
+    setPlayerHistory(move)
     {
-        game_Results = result; 
+        playerHistory.push(move);
     }
-    getResults()
+    getPlayerHistory()
     {
-        return game_Results;
+        return playerHistory;
+    }
+
+    /**
+     * Store end result of game
+     */
+    setResult( result )
+    {
+        gameResult = result;
+    }
+
+    /**
+     * Get end result of game
+     */
+    getResult()
+    {
+        return gameResults;
+    }
+    setSkill(skill)
+    {
+        gameSkillLevel = skill;
+    }
+    getSkill()
+    {
+        return gameSkillLevel;
     }
 
 }
