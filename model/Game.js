@@ -1,6 +1,3 @@
-/**
- * Created by Mychael Lepur on 2016-07-05.
- */
 "use strict"
 
 var boardHistory =[];
