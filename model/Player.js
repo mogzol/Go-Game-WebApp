@@ -142,7 +142,7 @@ class Player{
      */
     getResult()
     {
-        return gameResults;
+        return gameResult;
     }
     setSkill(skill)
     {
