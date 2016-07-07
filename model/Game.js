@@ -100,10 +100,6 @@ class Game{
         }else
             return false;           //change to a kind of alert?
     }
-
-    /**
-     * switch player turn after move is made
-     */
     switchTurn()
     {
         if( this._turn === this._playerBlack)
@@ -111,61 +107,48 @@ class Game{
         else
             this._turn= this._playerBlack;
     }
+	/**
+	 * Calculates final Score
+	 * Assigns skill level to each player
+	 * Skill ratio = (score + captured) * (player time / total time)
+	 */
+	finishGame()
+	{
+		//needs to be implemented
+		//Calculate score then set to player objects if not AI
 
-    /**
-     * returns current players turn
-     */
+		var totalGameTime= this._playerWhite.playTime+this._playerBlack.playTime;
+
+		if(this._playerBlack.isAI == false)
+		{
+			this._playerBlack.score( 1000 );
+			this._playerBlack.result(1); //won
+			var skillBlack= (this._playerBlack.score + this._playerBlack.captured) * (this._playerBlack.playTime / totalGameTime);
+			this._playerBlack.skill(skillBlack);
+		}
+		if(this._playerWhite.isAI == false)
+		{
+			this._playerWhite.score( 400 );
+			this._playerWhite.result(0); //lost
+			var skillWhite= (this._playerWhite.score + this._playerWhite.captured) * (this._playerWhite.playTime/ totalGameTime);
+			this._playerWhite.skill(skillWhite);
+		}
+	}
     get turn()
     {
         return this._turn();
     }
-    /**
-     * returns current board state
-     */
     get board()
     {
         return this._board;
     }
-    /**
-     * returns entire game history
-     */
     get boardHistory()
     {
         return this._boardHistory;
     }
-    /**
-     * returns most recent move
-     */
     get lastMove()
     {
         return this._boardHistory.pop();
-    }
-    /**
-     * Calculates final Score
-     * Assigns skill level to each player
-     * Skill ratio = (score + captured) * (player time / total time)
-     */
-    finishGame()
-    {
-        //needs to be implemented
-        //Calculate score then set to player objects if not AI
-
-        var totalGameTime= this._playerWhite.playTime+this._playerBlack.playTime;
-
-        if(this._playerBlack.isAI == false)
-        {
-            this._playerBlack.score( 1000 );
-            this._playerBlack.result(1); //won
-            var skillBlack= (this._playerBlack.score + this._playerBlack.captured) * (this._playerBlack.playTime / totalGameTime);
-            this._playerBlack.skill(skillBlack);
-        }
-        if(this._playerWhite.isAI == false)
-        {
-            this._playerWhite.score( 400 );
-            this._playerWhite.result(0); //lost
-            var skillWhite= (this._playerWhite.score + this._playerWhite.captured) * (this._playerWhite.playTime/ totalGameTime);
-            this._playerWhite.skill(skillWhite);
-        }
     }
 }
 

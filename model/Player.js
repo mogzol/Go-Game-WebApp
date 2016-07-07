@@ -13,22 +13,10 @@ class Player{
         this._captured = -1;
         this._pass = false;
         
-        this._playTime;              //play time in seconds
+        this._playTime = -1;              //play time in seconds
         this._gameResult = -1;      //Win or Loss
         this._playerHistory = [];    //Player's moves
         this._gameSkillLevel = -1;
-    }
-    get color()
-    {
-        return this._color;    
-    }
-    get player()
-    {
-        return this._player;   
-    }
-    get startDate()
-    {
-        return this._startDate;
     }
     /**
      * setPlayerTme()
@@ -44,61 +32,41 @@ class Player{
         this._playTime += (endPoint - startPoint) / 1000;
         this._runningDate = Date.now();
     }
-
-    /**
-     * getPlayTime()
-     * Returns player tim in seconds
-     * @returns {*| integer}
-     */
+	isAI()
+	{
+		return this._isAI;
+	}
     get playTime()
     {
         return this._playTime;
     }
-
-    /**
-     * isAI()
-     * Checks player object if AI
-     * @returns {*|boolean}
-     */
-    isAI()
-    {
-        return this._isAI;
-    }
-
-    /**
-     * setScore( score )
-     * @param score {integer} the score to set
-     */
     set score( score )
     {
         this._score = score;
     }
-
-    /**
-     * getScore()
-     * @returns {*| integer} Returns player score
-     */
     get score()
     {
         return this._score;
     }
-
-    /**
-     * setCaptured( cap )
-     * @param cap {token} Updates player captured
-     */
     set captured( cap )
     {
         this._captured= cap;
     }
-
-    /**
-     * getCaptured()
-     * @returns {*|token} Returns player captured
-     */
     get captured()
     {
         return this._captured;
+    }
+    get color()
+    {
+        return this._color;
+    }
+    get player()
+    {
+        return this._player;
+    }
+    get startDate()
+    {
+        return this._startDate;
     }
     set pass()
     {
