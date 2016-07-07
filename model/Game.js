@@ -1,6 +1,5 @@
 "use strict"
 
-var boardHistory =[];
 
 class Game{
 
@@ -11,6 +10,7 @@ class Game{
         this._turn = this._playerBlack;
         this._board = this.createBoard(size);
         this._remainingMoves= size*size;
+        this._boardHistory = [];
     }
 
     /**
@@ -37,7 +37,7 @@ class Game{
      */
     isValid(x,y) {
         var free = false;
-        var c = this._turn.getColor();
+        var c = this._turn.color;
         this._board[x][y] = c;
 
              //    is empty or owned             OR      surrounded
@@ -79,7 +79,7 @@ class Game{
      */
     makeMove(x,y)
     {
-        var color = this.getTurn().getColor();
+        var color = this.turn.color;
 
         if( this.isValid(x,y) ) {
             var move = {
@@ -92,8 +92,8 @@ class Game{
             }
             this._board[x][y] = color;
             this._remainingMoves--;
-            this.getTurn().setPlayerHistory(move);
-            boardHistory.push(move);
+            this._turn.playerHistory(move);
+            this._boardHistory.push(move);
             this.switchTurn();
             
             return true;            //change to a kind of alert?
@@ -115,30 +115,30 @@ class Game{
     /**
      * returns current players turn
      */
-    getTurn()
+    get turn()
     {
         return this._turn();
     }
     /**
      * returns current board state
      */
-    getBoard()
+    get board()
     {
         return this._board;
     }
     /**
      * returns entire game history
      */
-    getAllHistory()
+    get boardHistory()
     {
-        return boardHistory;
+        return this._boardHistory;
     }
     /**
      * returns most recent move
      */
-    getLastHistory()
+    get lastMove()
     {
-        return boardHistory.pop();
+        return this._boardHistory.pop();
     }
     /**
      * Calculates final Score
@@ -150,21 +150,21 @@ class Game{
         //needs to be implemented
         //Calculate score then set to player objects if not AI
 
-        var totalGameTime= this._playerWhite.getPlayTime()+this._playerBlack.getPlayTime();
+        var totalGameTime= this._playerWhite.playTime+this._playerBlack.playTime;
 
         if(this._playerBlack.isAI == false)
         {
-            this._playerBlack.setScore( 1000 );
-            this._playerBlack.setResult(1); //won
-            var skillBlack= (this._playerBlack.getScore() + this._playerBlack.getCaptured()) * (this._playerBlack.getPlayTime() / totalGameTime);
-            this._playerBlack.setSkill(skillBlack);
+            this._playerBlack.score( 1000 );
+            this._playerBlack.result(1); //won
+            var skillBlack= (this._playerBlack.score + this._playerBlack.captured) * (this._playerBlack.playTime / totalGameTime);
+            this._playerBlack.skill(skillBlack);
         }
         if(this._playerWhite.isAI == false)
         {
-            this._playerWhite.setScore( 400 );
-            this._playerWhite.setResult(0); //lost
-            var skillWhite= (this._playerWhite.getScore() + this._playerWhite.getCaptured()) * (this._playerWhite.getPlayTime() / totalGameTime);
-            this._playerWhite.setSkill(skillWhite);
+            this._playerWhite.score( 400 );
+            this._playerWhite.result(0); //lost
+            var skillWhite= (this._playerWhite.score + this._playerWhite.captured) * (this._playerWhite.playTime/ totalGameTime);
+            this._playerWhite.skill(skillWhite);
         }
     }
 }

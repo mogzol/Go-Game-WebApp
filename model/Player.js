@@ -1,9 +1,5 @@
 "use strict"
 
-var playTime;        //Play Time in Seconds
-var gameResult;     //Win or Loss?
-var playerHistory;   //Player's Moves
-var gameSkillLevel;
 class Player{
 
     constructor(name, color, isAI)
@@ -16,16 +12,21 @@ class Player{
         this._score = -1;
         this._captured = -1;
         this._pass = false;
+        
+        this._playTime;              //play time in seconds
+        this._gameResult = -1;      //Win or Loss
+        this._playerHistory = [];    //Player's moves
+        this._gameSkillLevel = -1;
     }
-    getColor()
+    get color()
     {
         return this._color;    
     }
-    getName()
+    get player()
     {
         return this._player;   
     }
-    getStartDate()
+    get startDate()
     {
         return this._startDate;
     }
@@ -35,12 +36,12 @@ class Player{
      * Updates the global variable play_Time
      * Updates the attribute this._date to current date
      */
-    startTimer()
+    startPlayTime()
     {
         var startPoint =  this._runningDate();
         var endPoint = Date.now();
 
-        playTime += (endPoint - startPoint) / 1000;
+        this._playTime += (endPoint - startPoint) / 1000;
         this._runningDate = Date.now();
     }
 
@@ -49,9 +50,9 @@ class Player{
      * Returns player tim in seconds
      * @returns {*| integer}
      */
-    getPlayTime()
+    get playTime()
     {
-        return playTime;
+        return this._playTime;
     }
 
     /**
@@ -68,7 +69,7 @@ class Player{
      * setScore( score )
      * @param score {integer} the score to set
      */
-    setScore( score )
+    set score( score )
     {
         this._score = score;
     }
@@ -77,7 +78,7 @@ class Player{
      * getScore()
      * @returns {*| integer} Returns player score
      */
-    getScore()
+    get score()
     {
         return this._score;
     }
@@ -86,7 +87,7 @@ class Player{
      * setCaptured( cap )
      * @param cap {token} Updates player captured
      */
-    setCaptured( cap )
+    set captured( cap )
     {
         this._captured= cap;
     }
@@ -95,62 +96,41 @@ class Player{
      * getCaptured()
      * @returns {*|token} Returns player captured
      */
-    getCaptured()
+    get captured()
     {
         return this._captured;
     }
-
-    /**
-     *setPass()
-     *Updates player object to pass on turn
-     */
-    setPass()
+    set pass()
     {
         this._pass = true;
     }
-
-    /**
-     * getPass()
-     * @returns {boolean} Checks if player wants to pass on turn
-     */
-    getPass()
+    get pass()
     {
         return this._pass;
     }
-    /**
-     * stores all the moves the player made
-     */
-    setPlayerHistory(move)
+    set playerHistory(move)
     {
-        playerHistory.push(move);
+        this._playerHistory.push(move);
     }
-    getPlayerHistory()
+    get playerHistory()
     {
-        return playerHistory;
+        return this._playerHistory;
     }
-
-    /**
-     * Store end result of game
-     */
-    setResult( result )
+    set result( result )
     {
-        gameResult = result;
+        this._gameResult = result;
     }
-
-    /**
-     * Get end result of game
-     */
-    getResult()
+    get result()
     {
-        return gameResult;
+        return this._gameResult;
     }
-    setSkill(skill)
+    set skill(skill)
     {
-        gameSkillLevel = skill;
+        this._gameSkillLevel = skill;
     }
-    getSkill()
+    get skill()
     {
-        return gameSkillLevel;
+        return this._gameSkillLevel;
     }
 
 }

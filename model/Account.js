@@ -1,12 +1,5 @@
 'use strict'
 
-var playerGames = [];
-var numWin;
-var numLoss;
-var overallRatio;
-var userBestGame;
-var userSkillLevel;
-
 class Accounts{
 
 
@@ -15,6 +8,12 @@ class Accounts{
         this._userName = name;
         this._password = password;
         this._email= email;
+        this._playerGames=[];
+        this._numWin;
+	    this._numLoss;
+        this._overallRatio;
+        this._userBestGame;
+        this._userSkillLevel;
     }
 
     /**
@@ -22,47 +21,47 @@ class Accounts{
      * updates User account with game stats stored in player
      * Stores game states in player_Games
      */
-    setPlayerStats( player )
+    set playerStats( player )
     {
         var gameStat={
-            gameDate: player.getStartDate(),
-            gameResult: player.getResult(),
-            gameTime: player.getPlayTime(),
-            gameScore: player.getScore(),
-            gameCaptured: player.getCaptured(),
-            gameMoves: player.getPlayerHistory(),
-            gameSkill: player.getSkill()
+            gameDate: player.startDate(),
+            gameResult: player.result(),
+            gameTime: player.playTime(),
+            gameScore: player.score(),
+            gameCaptured: player.captured(),
+            gameMoves: player.playerHistory(),
+            gameSkill: player.skill()
         };
         if(gameStat.gameResult == 1)
-            numWin += 1;
+            this._numWin += 1;
         else
-            numLoss += 1;
+            this._numLoss += 1;
 
-        overallRatio= numWin/numLoss;
-        playerGames.push(gameStat);
+        this._overallRatio= this._numWin / this._numLoss;
+        this._playerGames.push(gameStat);
         this.calculateBestGame();
     }
 
     /**
      * returns Overall Ratio
      */
-    getOverallRatio()
+    get overallRatio()
     {
-        return overallRatio;
+        return this._overallRatio;
     }
     /**
      * returns users skill level
      */
-    getUserSkillLevel()
+    get userSkillLevel()
     {
-        return userSkillLevel;
+        return this._userSkillLevel;
     }
     /**
      * returns index of users best game
      */
-    getUserBestGame()
+    get userBestGame()
     {
-        return userBestGame;
+        return this._userBestGame;
     }
 
     /**
@@ -72,16 +71,16 @@ class Accounts{
     calculateBestGame()
     {
         var Skill=0;
-        userSkillLevel=0;
+        this._userSkillLevel=0;
 
-        for(var i= 0; i< playerGames.length; i++)
+        for(var i= 0; i< this._playerGames.length; i++)
         {
-            userSkillLevel += playerGames[i].gameSkill;
-            if(playerGames[i].gameResult == 0)
+            this._userSkillLevel += this._playerGames[i].gameSkill;
+            if(this._playerGames[i].gameResult == 0)
                 i++;
-            else if(Skill < playerGames[i].gameSkill){
-                Skill= playerGames[i].gameSkill;
-                userBestGame= i;
+            else if(Skill < this._playerGames[i].gameSkill){
+                Skill= this._playerGames[i].gameSkill;
+                this._userBestGame= i;
             }
         }
     }
