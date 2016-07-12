@@ -1,22 +1,23 @@
 "use strict"
 
-class Player{
+module.exports= class Player{
 
     constructor(name, color, isAI)
     {
-        this._player = name;
-        this._startDate= Date.now();
-        this._runningDate= Date.now();
-        this._color = color;
-        this._isAI = isAI || false;
-        this._score = -1;
-        this._captured = -1;
-        this._pass = false;
-        
-        this._playTime = -1;              //play time in seconds
-        this._gameResult = -1;      //Win or Loss
-        this._playerHistory = [];    //Player's moves
-        this._gameSkillLevel = -1;
+        this._player = name;            //Name of player
+        this._startDate= Date.now();    //Date player was created
+        this._runningDate= {            //JSON variable to count play time
+            'startTime': null,
+            'playTime': null
+        };
+        this._color = color;            //Player color (Black/White)
+        this._isAI = isAI || false;     //Is the Player an AI
+        this._score = -1;               //Player Score
+        this._captured = -1;            //Amount of armies captured
+        this._pass = false;             //Does player pass turn
+        this._gameResult = -1;          //Win or Loss
+        this._playerHistory = [];       //Player's moves
+        this._gameSkillLevel = -1;      //Player's Skill level
     }
     /**
      * setPlayerTme()
@@ -24,81 +25,68 @@ class Player{
      * Updates the global variable play_Time
      * Updates the attribute this._date to current date
      */
-    startPlayTime()
+    start()
     {
-        var startPoint =  this._runningDate();
-        var endPoint = Date.now();
-
-        this._playTime += (endPoint - startPoint) / 1000;
-        this._runningDate = Date.now();
+        this._runningDate.startTime= Date.now();
     }
-	isAI()
-	{
-		return this._isAI;
-	}
+    end()
+    {
+        this._runningDate.playTime += (Date.now()-this._runningDate.startTime) / 1000;
+    }
     get playTime()
     {
-        return this._playTime;
+        return Math.floor(this._runningDate.playTime).toString();
     }
-    set score( score )
+    isAI()
     {
+        return this._isAI;
+    }
+    set score( score ) {
         this._score = score;
     }
-    get score()
-    {
+    get score() {
         return this._score;
     }
-    set captured( cap )
-    {
+    set captured( cap ) {
         this._captured= cap;
     }
-    get captured()
-    {
+
+    get captured() {
         return this._captured;
     }
-    get color()
-    {
-        return this._color;
-    }
-    get player()
-    {
-        return this._player;
-    }
-    get startDate()
-    {
-        return this._startDate;
-    }
-    set pass()
-    {
-        this._pass = true;
-    }
-    get pass()
-    {
-        return this._pass;
-    }
-    set playerHistory(move)
-    {
-        this._playerHistory.push(move);
-    }
-    get playerHistory()
-    {
-        return this._playerHistory;
-    }
-    set result( result )
-    {
+    set result( result ) {
         this._gameResult = result;
     }
-    get result()
-    {
+    get result() {
         return this._gameResult;
     }
     set skill(skill)
     {
         this._gameSkillLevel = skill;
     }
-    get skill()
-    {
+    get skill() {
         return this._gameSkillLevel;
     }
-
+    get color() {
+        return this._color;
+    }
+    get player() {
+        return this._player;
+    }
+    get startDate()
+    {
+        return this._startDate;
+    }
+    set pass( flag ) {
+        this._pass = flag;
+    }
+    get pass() {
+        return this._pass;
+    }
+    set playerHistory(move) {
+        this._playerHistory.push(move);
+    }
+    get playerHistory() {
+        return this._playerHistory;
+    }
 }
