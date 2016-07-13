@@ -34,7 +34,12 @@
 						<li><a href="{{ routes.admin }}">Admin Page</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
-						<li><a href="{{ routes.login }}"><span class="glyphicon glyphicon-log-in"></span> Register/Login</a></li>
+						{% if session.username %}
+							<li><a href="{{ routes.account }}"><span class="glyphicon glyphicon-user"></span> {{ session.username }}'s Account</a></li>
+							<li><a href="{{ routes.logout }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+						{% else %}
+							<li><a href="{{ routes.login }}"><span class="glyphicon glyphicon-log-in"></span> Register/Login</a></li>
+						{% endif %}
 					</ul>
 				</div>
 			</div>
