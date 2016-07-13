@@ -46,8 +46,6 @@ module.exports = class Login
 			// Create an account from the first user (there should only be 1 user)
 			var account = new Account(users[0]);
 
-			console.log(account.password);
-
 			// Verify the password
 			if (bcrypt.compareSync(password, account.password)) {
 				// For now we'll just show an alert that it was good
