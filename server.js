@@ -62,6 +62,7 @@ var port = 3000;
 app.use(function(request, response, next) {
 	env.addGlobal('flashes', request.flash());
 	env.addGlobal('routes', routes);
+	env.addGlobal('session', request.session);
 	next();
 });
 
@@ -72,7 +73,6 @@ app.use(function(request, response, next) {
 
 // Serve the static content (libraries, etc.)
 app.use(express.static('public'));
-
 
 
 
@@ -108,6 +108,11 @@ app.get(routes.login, csrfProtection, function(request, response) {
 // Login POST request
 app.post(routes.login, parseForm, csrfProtection, function(request, response) {
 	controllers.Login.loginAction(request, response, db);
+});
+
+// Logout GET request
+app.get(routes.logout, function(request, response) {
+	controllers.Login.logoutAction(request, response);
 });
 
 // Add user POST request
