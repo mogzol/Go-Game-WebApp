@@ -1,0 +1,14 @@
+.navbar-brand {
+	font-size: 22px;
+	font-weight: bold;
+}
+
+.name {
+	color: #bf3d3d;
+	font-weight: normal;
+}
+
+.navbar-brand:hover .name {
+	color: #ff5858;
+	font-weight: normal;
+}

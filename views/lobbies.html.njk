@@ -1,0 +1,65 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Lobbies{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<div class="row">
+			<div class="col-md-9 col-sm-8"><h1>Open Lobbies</h1></div>
+			<div class="col-md-3 col-sm-4">
+				<h1><button data-toggle="modal" data-target="#add_lobby" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-plus"></span> Create a new lobby</button></h1>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+			{% if lobbies.length < 1 %}
+				There are currently no open lobbies, but feel free to <a href="javascript:void(0)" data-toggle="modal" data-target="#add_lobby">create one</a>!
+			{% endif %}
+
+			{% for lobby in lobbies %}
+				{{ lobby._name }}<br>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div id="add_lobby" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form action="{{ routes.createLobby }}" method="POST">
+					<input type="hidden" name="_csrf" value="{{csrfToken}}">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Create a Lobby</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col col-sm-6">
+								<div class="form-group">
+									<label for="name">Lobby Name</label>
+									<input type="text" class="form-control" name="name" id="name" required>
+								</div>
+							</div>
+							<div class="col col-sm-6">
+								<div class="form-group">
+									<div class="form-group">
+										<label for="visibility">Visibility</label>
+										<select name="visibility" id="visibility" class="form-control" required>
+											<option value="public">Public</option>
+											<option value="private">Private</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Create Lobby</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}

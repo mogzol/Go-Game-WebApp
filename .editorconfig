@@ -1,0 +1,11 @@
+# See the EditorConfig website for how to config: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Rules applied to all files
+[*]
+end_of_line = lf
+insert_final_newline = true
+indent_style = tab
+trim_trailing_whitespace = true

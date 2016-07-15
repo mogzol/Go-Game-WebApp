@@ -4,7 +4,7 @@ var routes = require('../routes.js');
 
 var userDb = 'user';
 
-module.exports = class Admin
+module.exports = class AdminController
 {
 	/**
 	 * Handles rendering the base user page

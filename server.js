@@ -32,7 +32,8 @@ var csrfProtection = csrf({ cookie: false });
 var nunjucks = require('nunjucks');
 var env = nunjucks.configure({
 	autoescape: true,
-	express: app
+	express: app,
+	watch: true // Watch templates for changes. Useful for dev, remove for production though
 });
 env.addFilter('empty', function(object) { // Needed a way to check if an object was empty
 	return Object.keys(object).length === 0;
@@ -52,6 +53,19 @@ var controllers = require('auto-loader').load(__dirname + '/controllers');
 // Load our routes
 var routes = require('./routes.js');
 
+// Access control
+var access = require('./access.js');
+function requiresUser(url) {
+	for (var pattern of access.user)
+		if (url.match(pattern))
+			return true;
+}
+function requiresAdmin(url) {
+	for (var pattern of access.admin)
+		if (url.match(pattern))
+			return true;
+}
+
 // The port we will run on
 var port = 3000;
 
@@ -60,6 +74,19 @@ var port = 3000;
  * -------- GLOBAL REQUEST LOGIC
  */
 app.use(function(request, response, next) {
+	// Handle access control
+	var url = request.url;
+
+	if (!request.session.userType && (requiresUser(url) || requiresAdmin(url))) {
+		request.session.redirectOnLogin = url;
+		request.flash('info', 'Please log in to access that page');
+		response.redirect(routes.login);
+		return;
+	} else if (request.session.userType < 2 && requiresAdmin(url)) {
+		response.status(403).send('You don\'t have permission to access that page');
+		return;
+	}
+
 	env.addGlobal('flashes', request.flash());
 	env.addGlobal('routes', routes);
 	env.addGlobal('session', request.session);
@@ -85,39 +112,51 @@ app.get(routes.home, csrfProtection, function(request, response) {
 
 // Admin page. Right now anyone can access it (bad shit)
 app.get(routes.admin, csrfProtection, function(request, response) {
-	controllers.Admin.indexAction(request, response, db);
+	controllers.AdminController.indexAction(request, response, db);
 });
 
 // Admin page. Right now anyone can access it (bad shit)
 app.post(routes.adminCreateAccount, csrfProtection, function(request, response) {
-	controllers.Admin.createAccountAction(request, response, db);
+	controllers.AdminController.createAccountAction(request, response, db);
 });
 
 // Remove all users POST request
 app.post(routes.removeAllAccounts, parseForm, csrfProtection, function(request, response) {
-	controllers.Admin.removeUsersAction(request, response, db);
+	controllers.AdminController.removeUsersAction(request, response, db);
 });
 
 
 
 // Login page
 app.get(routes.login, csrfProtection, function(request, response) {
-	controllers.Login.indexAction(request, response, db);
+	controllers.LoginController.indexAction(request, response, db);
 });
 
 // Login POST request
 app.post(routes.login, parseForm, csrfProtection, function(request, response) {
-	controllers.Login.loginAction(request, response, db);
+	controllers.LoginController.loginAction(request, response, db);
 });
 
 // Logout GET request
 app.get(routes.logout, function(request, response) {
-	controllers.Login.logoutAction(request, response);
+	controllers.LoginController.logoutAction(request, response);
 });
 
 // Add user POST request
 app.post(routes.createAccount, parseForm, csrfProtection, function(request, response) {
-	controllers.Login.addAccountAction(request, response, db);
+	controllers.LoginController.addAccountAction(request, response, db);
+});
+
+
+
+// Lobbies
+app.get(routes.lobbies, csrfProtection, function(request, response) {
+	controllers.LobbyController.indexAction(request, response, db);
+});
+
+// Create lobby
+app.post(routes.createLobby, parseForm, csrfProtection, function(request, response) {
+	controllers.LobbyController.addAction(request, response, db);
 });
 
 /*

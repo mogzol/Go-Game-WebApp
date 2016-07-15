@@ -7,12 +7,12 @@ var Account = require('../model/Account.js');
 
 var userDb = 'user';
 
-module.exports = class Login
+module.exports = class LoginController
 {
 	/**
 	 * Handles rendering the base user page
 	 */
-	static indexAction(request, response, db)
+	static indexAction(request, response)
 	{
 		response.render('views/login.html.njk', {
 			csrfToken: request.csrfToken()
@@ -50,8 +50,16 @@ module.exports = class Login
 			if (bcrypt.compareSync(password, account.password)) {
 				// For now we'll just show an alert that it was good
 				request.session.username = account.username;
+				request.session.userType = account.userType;
 				request.flash('success', 'You have been successfully logged in');
-				response.redirect(routes.home);
+
+				if (request.session.redirectOnLogin) {
+					response.redirect(request.session.redirectOnLogin);
+					delete request.session.redirectOnLogin;
+				}
+				else {
+					response.redirect(routes.home);
+				}
 			} else {
 				// For now we'll just show an alert that it was good
 				request.flash('danger', 'Invalid username/password.');
@@ -63,6 +71,7 @@ module.exports = class Login
 	static logoutAction(request, response)
 	{
 		delete request.session.username;
+		delete request.session.userType;
 		request.flash('success', 'Successfully logged out');
 		response.redirect(routes.home);
 	}
@@ -105,7 +114,7 @@ module.exports = class Login
 					return;
 				}
 
-				request.flash('success', 'User added to the database!');
+				request.flash('success', 'Account created successfully! You can now log in.');
 				response.redirect(routes.login);
 			});
 		});

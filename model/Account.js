@@ -4,11 +4,12 @@ module.exports = class Account
 {
     constructor(name, password, email)
     {
-    	var load = typeof name == 'object';
+    	var load = typeof name === 'object';
 
         this._username = load ? name._username : name;
         this._password = load ? name._password : password;
         this._email = load ? name._email : email;
+	    this._userType = load ? name._userType : 1; // 1 is a basic user, 2 is an admin
         this._playerGames = load ? name._playerGames : [];
         this._numWin = load ? name._numWin : 0;
 	    this._numLoss = load ? name._numLoss : 0;
@@ -46,6 +47,17 @@ module.exports = class Account
     {
     	this._email = email;
     }
+
+    get userType()
+    {
+    	return this._userType;
+    }
+
+    set userType(type)
+    {
+    	this._userType = type;
+    }
+
 
     /**
      * setPlayerStats( player )
