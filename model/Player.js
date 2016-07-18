@@ -12,8 +12,8 @@ module.exports= class Player{
         };
         this._color = color;            //Player color (Black/White)
         this._isAI = isAI || false;     //Is the Player an AI
-        this._score = -1;               //Player Score
-        this._captured = -1;            //Amount of armies captured
+        this._score = 0;               //Player Score
+        this._captured = 0;            //Amount of armies captured
         this._pass = false;             //Does player pass turn
         this._gameResult = -1;          //Win or Loss
         this._playerHistory = [];       //Player's moves
@@ -37,7 +37,7 @@ module.exports= class Player{
     {
         return Math.floor(this._runningDate.playTime).toString();
     }
-    isAI()
+    get isAI()
     {
         return this._isAI;
     }
