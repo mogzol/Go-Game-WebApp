@@ -93,8 +93,10 @@ module.exports = class LobbyController {
 		}
 
 		// First we'll try to add the user to the lobby
-		if (!lobby.addUser(user)) {
-			ws.close(undefined, 'You are already in this lobby!');
+		try {
+			lobby.addUser(user);
+		} catch (err) {
+			ws.close(undefined, err);
 			return;
 		}
 
@@ -112,6 +114,28 @@ module.exports = class LobbyController {
 
 			if (message.message) {
 				lobby.addMessage(user, message.message);
+				pushUpdate();
+			}
+
+			if (message.owner && lobby.owner === user && lobby.users.includes(message.owner)) {
+				lobby.owner = message.owner;
+				pushUpdate();
+			}
+
+			if ((message.kick || message.ban) && lobby.owner === user) {
+				var remove = message.kick || message.ban;
+				var ban = Boolean(message.ban);
+				var action = ban ? 'been banned from' : 'been kicked from';
+				lobby.removeUser(remove, ban, action);
+				if (lobbyConnections[name]) {
+					var ws = lobbyConnections[name][remove];
+					if (ws) {
+						ws.close(undefined, 'You have ' + action + ' the lobby');
+					}
+
+					delete lobbyConnections[name][remove];
+				}
+
 				pushUpdate();
 			}
 		});

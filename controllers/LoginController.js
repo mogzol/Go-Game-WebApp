@@ -31,7 +31,7 @@ module.exports = class LoginController
 		}
 
 		var users = db.collection(userDb);
-		users.find({_username:username}, function(err, users) {
+		users.find({_username: username}, function(err, users) {
 			if (err) {
 				console.log(err);
 				request.flash('danger', 'An error occurred, please try again.');
@@ -87,6 +87,20 @@ module.exports = class LoginController
 			response.redirect(routes.login);
 			return;
 		}
+
+		if (!username.match(/^[a-z0-9-_]+$/i)) {
+			request.flash('danger', 'Usernames can only contain letters, numbers, dashes, and underscores.');
+			response.redirect(routes.login);
+			return;
+		}
+
+		if (username.length > 64) {
+			request.flash('danger', 'Usernames can only be a maximum of 64 characters long.');
+			response.redirect(routes.login);
+			return;
+		}
+
+		username = username.trim(); // Trim any leading/trailing whitespace
 
 		var users = db.collection(userDb);
 

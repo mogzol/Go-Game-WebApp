@@ -50,6 +50,33 @@
 	margin-bottom: 5px;
 }
 
+span.give-owner,
+span.kick,
+span.ban {
+	display: none;
+}
+
+span.give-owner:hover {
+	color: #337ab7;
+	cursor: pointer;
+}
+
+span.kick:hover {
+	color: #8a6d3b;
+	cursor: pointer;
+}
+
+span.ban:hover {
+	color: #a94442;
+	cursor: pointer;
+}
+
+td:hover span.give-owner,
+td:hover span.kick,
+td:hover span.ban {
+	display: inline;
+}
+
 @media(min-width:768px) {
 	.lobby-top {
 		height: 400px;

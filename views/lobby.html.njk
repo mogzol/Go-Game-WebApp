@@ -21,7 +21,7 @@
 									<tbody id="users"></tbody>
 								</table>
 							</div>
-							<button class="btn btn-success btn-block">Start Game</button>
+							<button id="start" title="Only the owner can start the game" class="btn btn-success btn-block">Start Game</button>
 						</div>
 						<div class="col-sm-8">
 							<div class="lobby-messages-header">Lobby Messages</div>
@@ -38,20 +38,81 @@
 			</div>
 		</div>
 	</div>
+
+	<div id="confirm_ownership" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Give Ownership</h4>
+				</div>
+				<div class="modal-body">
+					<p>Give ownership of the lobby over to <strong><span id="new_owner"></span></strong>?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+					<button id="give_ownership" class="btn btn-success" data-dismiss="modal">Give Ownership</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="confirm_kick" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Kick User</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to kick <strong><span id="kicked_user"></span></strong> from the lobby?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+					<button id="kick" class="btn btn-warning" data-dismiss="modal">Kick</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="confirm_ban" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Ban User</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to ban <strong><span id="banned_user"></span></strong> from the lobby?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+					<button id="ban" class="btn btn-danger" data-dismiss="modal">Ban</button>
+				</div>
+			</div>
+		</div>
+	</div>
 {% endblock %}
 
 {% block javascript %}
 <script>
-	var $userList, $loader, $lobby, $messageList, $message, $send;
+	var $userList, $loader, $lobby, $messageList, $message, $send, $ownerModal, $giveOwnerName, $giveOwner, $kickModal,
+			$kickName, $kick, $banModal, $banName, $ban, $start;
 
 	function updateLobby(lobby) {
+		var isOwner = lobby._owner === '{{ session.username }}';
+
 		$userList.empty();
 		lobby._users.forEach(function(user) {
 			var $user;
 			if (lobby._owner === user) {
 				$user = $('<tr>').append($('<td>').text(user + ' ').append($('<span class="glyphicon glyphicon-star">')));
 			} else {
-				$user = $('<tr>').append($('<td>').text(user));
+				$user = $('<tr>').append($('<td>').text(user + ' ').append(isOwner ?
+						$('<span class="glyphicon glyphicon-star text-muted give-owner" title="Give Ownership"></span> ' +
+								'<span class="glyphicon glyphicon-remove text-muted kick" title="Kick"></span> ' +
+								'<span class="glyphicon glyphicon-minus-sign text-muted ban" title="Ban"></span>'
+						) : null));
 			}
 
 			$userList.append($user);
@@ -70,6 +131,12 @@
 		});
 		$messageList.scrollTop($messageList.prop('scrollHeight')); // Scroll to bottom of list
 
+		if (isOwner) {
+			$start.prop('disabled', false);
+		} else {
+			$start.prop('disabled', true);
+		}
+
 		if ($loader.is(':visible')) {
 			$loader.fadeOut('fast', function() {
 				$lobby.slideDown('fast');
@@ -86,6 +153,16 @@
 		$messageList = $('#messages');
 		$message = $('#message');
 		$send = $('#send');
+		$ownerModal = $('#confirm_ownership');
+		$giveOwnerName = $('#new_owner');
+		$giveOwner = $('#give_ownership');
+		$kickModal = $('#confirm_kick');
+		$kickName = $('#kicked_user');
+		$kick = $('#kick');
+		$banModal = $('#confirm_ban');
+		$banName = $('#banned_user');
+		$ban = $('#ban');
+		$start = $('#start');
 
 		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', lobby.name|urlencode) }}');
 
@@ -126,6 +203,30 @@
 			if (event.keyCode === 13){
 				$send.click();
 			}
+		});
+
+		// Handle owner actions
+		$userList.on('click', '.give-owner', function() {
+			$giveOwnerName.text($(this).parent().text().trim());
+			$ownerModal.modal();
+		}).on('click', '.kick', function() {
+			$kickName.text($(this).parent().text().trim());
+			$kickModal.modal();
+		}).on('click', '.ban', function() {
+			$banName.text($(this).parent().text().trim());
+			$banModal.modal();
+		});
+
+		$giveOwner.on('click', function() {
+			lobbySocket.send(JSON.stringify({owner: $giveOwnerName.text()}));
+		});
+
+		$kick.on('click', function() {
+			lobbySocket.send(JSON.stringify({kick: $kickName.text()}));
+		});
+
+		$ban.on('click', function() {
+			lobbySocket.send(JSON.stringify({ban: $banName.text()}));
 		});
 
 		// Warn user when navigating away that they will leave the lobby
