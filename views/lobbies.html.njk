@@ -15,11 +15,25 @@
 	<div class="row">
 		<div class="col-md-12">
 			{% if lobbies.length < 1 %}
-				There are currently no open lobbies, but feel free to <a href="javascript:void(0)" data-toggle="modal" data-target="#add_lobby">create one</a>!
+				There are currently no open lobbies, but feel free to <a href="javascript:void(0);" data-toggle="modal" data-target="#add_lobby">create one</a>!
 			{% endif %}
 
 			{% for lobby in lobbies %}
-				{{ lobby._name }}<br>
+				<div class="panel panel-default">
+					<div class="panel-body lobby">
+						<div class="row">
+							<div class="col-sm-8 col-md-9">
+								<div class="lobby-name"><strong>{{ lobby.name }}</strong></div>
+							</div>
+							<div class="col-sm-4 col-md-3">
+								<div class="pull-right">
+									<small>Members: <strong>{{ lobby.users.length }}</strong></small>&nbsp;&nbsp;
+									<a href="{{ routes.joinLobby|replace(':lobby', lobby.name|urlencode) }}" class="btn btn-default">Join Lobby</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			{% endfor %}
 		</div>
 	</div>

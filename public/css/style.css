@@ -12,3 +12,50 @@
 	color: #ff5858;
 	font-weight: normal;
 }
+
+.lobby {
+	font-size: 1.3em;
+	background: #eeeeee;
+}
+
+@media(min-width:768px) {
+	.lobby {
+		padding-top: 0;
+		padding-bottom: 0;
+		height:50px;
+		line-height: 50px;
+	}
+}
+
+.lobby-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.lobby-top {
+	max-height: 400px;
+	overflow-y: auto;
+	margin-bottom: 10px;
+}
+
+.lobby-top table {
+	margin-bottom: 0;
+}
+
+.lobby-messages-header {
+	margin-top: 15px;
+	font-size: 1.8em;
+	font-weight: 500;
+	margin-bottom: 5px;
+}
+
+@media(min-width:768px) {
+	.lobby-top {
+		height: 400px;
+	}
+
+	.lobby-messages-header {
+		display: none;
+	}
+}

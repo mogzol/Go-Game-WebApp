@@ -68,5 +68,6 @@ Here are the links to the pages for all the dependencies we are currently using,
 **csurf**: https://github.com/expressjs/csurf  
 **express**: http://expressjs.com/en/4x/api.html  
 **express-session**: https://github.com/expressjs/session  
+**express-ws**: https://github.com/HenningM/express-ws  
 **mongojs**: https://github.com/mafintosh/mongojs  
 **nunjucks**: http://mozilla.github.io/nunjucks/  

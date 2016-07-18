@@ -11,6 +11,9 @@
 var express = require('express');
 var app = express();
 
+// Set up websockets
+var expressWs = require('express-ws')(app);
+
 // Set up session handler
 var session = require('express-session');
 app.use(session({
@@ -78,6 +81,12 @@ app.use(function(request, response, next) {
 	var url = request.url;
 
 	if (!request.session.userType && (requiresUser(url) || requiresAdmin(url))) {
+		if (request.ws) { // if this is a websocket request, just send a 403
+			response.status(403).send('You don\'t have permission to access that page');
+			return;
+		}
+
+		// Otherwise, redirect to login
 		request.session.redirectOnLogin = url;
 		request.flash('info', 'Please log in to access that page');
 		response.redirect(routes.login);
@@ -87,11 +96,29 @@ app.use(function(request, response, next) {
 		return;
 	}
 
+	env.addGlobal('url', request.url);
 	env.addGlobal('flashes', request.flash());
 	env.addGlobal('routes', routes);
 	env.addGlobal('session', request.session);
 	next();
 });
+
+// Our express-ws package interfere with routes that have params due to the fact that it adds .websocket to the end of
+// URLs. This causes matches on URLs that shouldn't match, so we want to avoid this.
+//
+// !!!!! Make sure you add this as the first middle-ware function to any routes that have params (including ws routes).
+function hasParams(req, res, next) {
+	for (var param in req.params) {
+		if (!req.params.hasOwnProperty(param))
+			continue; // skip loop if the property is from prototype
+
+		if (req.params[param] === '.websocket') {
+			next('route');
+			return;
+		}
+	}
+	next();
+}
 
 
 /*
@@ -159,13 +186,25 @@ app.post(routes.createLobby, parseForm, csrfProtection, function(request, respon
 	controllers.LobbyController.addAction(request, response, db);
 });
 
+// Join lobby
+app.get(routes.joinLobby, hasParams, csrfProtection, function(request, response) {
+	controllers.LobbyController.joinAction(request, response, db);
+});
+
+// Lobby websocket request
+app.ws(routes.joinLobby, hasParams, function(ws, request) {
+	controllers.LobbyController.wsAction(ws, request, db);
+});
+
 /*
  * -------- ERROR HANDLING
  */
 
 // Handle bad CSRF token
 app.use(function (err, req, res, next) {
-	if (err.code !== 'EBADCSRFTOKEN') return next(err);
+	if (err.code !== 'EBADCSRFTOKEN')
+		return next(err);
+
 	res.status(403).send('Invalid form submission attempted! You aren\'t allowed to do whatever you just tried doing!');
 });
 

@@ -34,15 +34,16 @@
 				</div>
 				<div class="collapse navbar-collapse" id="myNavbar">
 					<ul class="nav navbar-nav">
-						<li><a href="{{ routes.lobbies }}">Open Lobbies</a></li>
-						<li><a href="{{ routes.admin }}">Admin Page</a></li>
+						<li {% if url == routes.quickGame %}class="active"{% endif %}><a href="{{ routes.quickGame }}">Quick Game</a></li>
+						<li {% if url == routes.lobbies %}class="active"{% endif %}><a href="{{ routes.lobbies }}">Lobbies</a></li>
+						<li {% if url == routes.admin %}class="active"{% endif %}><a href="{{ routes.admin }}">Admin Zone</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						{% if session.username %}
-							<li><a href="{{ routes.account }}"><span class="glyphicon glyphicon-user"></span> {{ session.username }}'s Account</a></li>
-							<li><a href="{{ routes.logout }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+							<li {% if url == routes.account %}class="active"{% endif %}><a href="{{ routes.account }}"><span class="glyphicon glyphicon-user"></span> {{ session.username }}'s Account</a></li>
+							<li {% if url == routes.logout %}class="active"{% endif %}><a href="{{ routes.logout }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
 						{% else %}
-							<li><a href="{{ routes.login }}"><span class="glyphicon glyphicon-log-in"></span> Register/Login</a></li>
+							<li {% if url == routes.login %}class="active"{% endif %}><a href="{{ routes.login }}"><span class="glyphicon glyphicon-log-in"></span> Register/Login</a></li>
 						{% endif %}
 					</ul>
 				</div>

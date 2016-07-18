@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 module.exports= class Player{
 
@@ -89,4 +89,4 @@ module.exports= class Player{
     get playerHistory() {
         return this._playerHistory;
     }
-}
+};

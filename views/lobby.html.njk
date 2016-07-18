@@ -1,0 +1,142 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Lobbies{% endblock %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-md-offset-1 col-md-10">
+			<div class="panel panel-default">
+				<div class="panel-heading"><h4>{{ lobby.name }} <small>Lobby</small></h4></div>
+				<div class="panel-body">
+					<div id="loader" class="text-center">Joining lobby, please wait...</div>
+					<div class="row" id="lobby" style="display:none">
+						<div class="col-sm-4">
+							<div id="userList" class="lobby-top">
+								<table class="table table-bordered table-striped">
+									<thead>
+									<tr>
+										<th>Lobby members</th>
+									</tr>
+									</thead>
+									<tbody id="users"></tbody>
+								</table>
+							</div>
+							<button class="btn btn-success btn-block">Start Game</button>
+						</div>
+						<div class="col-sm-8">
+							<div class="lobby-messages-header">Lobby Messages</div>
+							<div id="messages" class="lobby-top"></div>
+							<div class="input-group">
+								<input id="message" class="form-control" type="text">
+								<span class="input-group-btn">
+									<button id="send" class="btn btn-default">Send</button>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+	var $userList, $loader, $lobby, $messageList, $message, $send;
+
+	function updateLobby(lobby) {
+		$userList.empty();
+		lobby._users.forEach(function(user) {
+			var $user;
+			if (lobby._owner === user) {
+				$user = $('<tr>').append($('<td>').text(user + ' ').append($('<span class="glyphicon glyphicon-star">')));
+			} else {
+				$user = $('<tr>').append($('<td>').text(user));
+			}
+
+			$userList.append($user);
+		});
+
+		$messageList.empty();
+		lobby._messages.forEach(function(message) {
+			var $message;
+			if (message.by === null) {
+				$message = $('<div>').append($('<em class="text-primary">').text(message.msg));
+			} else {
+				$message = $('<div>').append($('<strong>').text(message.by + ': ')).append($('<span>').text(message.msg));
+			}
+
+			$messageList.append($message);
+		});
+		$messageList.scrollTop($messageList.prop('scrollHeight')); // Scroll to bottom of list
+
+		if ($loader.is(':visible')) {
+			$loader.fadeOut('fast', function() {
+				$lobby.slideDown('fast');
+				$messageList.scrollTop($messageList.prop('scrollHeight')); // Scroll to bottom of list (now that its visible)
+			});
+		}
+	}
+
+	$(document).ready(function() {
+		// Set up globals
+		$userList = $('#users');
+		$loader = $('#loader');
+		$lobby = $('#lobby');
+		$messageList = $('#messages');
+		$message = $('#message');
+		$send = $('#send');
+
+		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', lobby.name|urlencode) }}');
+
+		lobbySocket.onmessage = function (event) {
+			var message = JSON.parse(event.data);
+
+			if (message.lobby) {
+				updateLobby(message.lobby);
+			}
+		};
+
+		lobbySocket.onclose = function (event) {
+			$loader.addClass('text-danger');
+
+			if (event.reason) {
+				$loader.text('Connection closed by server: ' + event.reason);
+			} else {
+				$loader.text('Lost connection to server.');
+			}
+
+			$loader.append($('<br><a href="{{ routes.lobbies }}">Click here to return to the lobby list</a>'));
+
+			$lobby.fadeOut('fast', function() {
+				$loader.show();
+			});
+
+			window.onbeforeunload = null;
+		};
+
+		// Handle sending messages
+		$send.on('click', function() {
+			lobbySocket.send(JSON.stringify({message: $message.val()}));
+			$message.val('');
+		});
+
+		// Send on enter
+		$message.keyup(function(event){
+			if (event.keyCode === 13){
+				$send.click();
+			}
+		});
+
+		// Warn user when navigating away that they will leave the lobby
+		window.onbeforeunload = function() {
+			// Newest chrome doesn't allow for custom string, but we'll leave it here for other browsers
+			return "Navigating away from this page will remove you from the lobby. Are you sure you wish to continue?";
+		};
+
+		window.onunload = function() {
+			lobbySocket.close();
+		};
+	});
+</script>
+{% endblock %}
