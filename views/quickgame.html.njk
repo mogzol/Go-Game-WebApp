@@ -1,0 +1,33 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Quick Game{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<h1>Quick Game</h1>
+		<p class="lead">
+			Choose your type of game below
+		</p>
+	</div>
+
+	<div class="row">
+		<div class="col-lg-6">
+			<div class="jumbotron text-center">
+				<h1>Hotseat Play</h1>
+				<h1><span class="glyphicon glyphicon-fire"></span></h1>
+				<p>Want to play against a friend on a single computer? Look no further.</p>
+				<br>
+				<p><a class="btn btn-primary btn-lg" href="#" role="button">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</a></p>
+			</div>
+		</div>
+		<div class="col-lg-6">
+			<div class="jumbotron text-center">
+				<h1>AI Play</h1>
+				<h1><span class="glyphicon glyphicon glyphicon-eye-open"></span></h1>
+				<p>Play against an artificial intelligence smarter than Skynet itself.</p>
+				<br>
+				<p><a class="btn btn-primary btn-lg" href="#" role="button">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</a></p>
+			</div>
+		</div>
+	</div>
+{% endblock %}

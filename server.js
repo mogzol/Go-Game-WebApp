@@ -196,6 +196,13 @@ app.ws(routes.joinLobby, hasParams, function(ws, request) {
 	controllers.LobbyController.wsAction(ws, request, db);
 });
 
+
+
+// Quick Game
+app.get(routes.quickGame, function(request, response) {
+	controllers.QuickGameController.indexAction(request, response);
+});
+
 /*
  * -------- ERROR HANDLING
  */
