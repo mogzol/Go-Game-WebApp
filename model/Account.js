@@ -10,7 +10,7 @@ module.exports = class Account
         this._password = load ? name._password : password;
         this._email = load ? name._email : email;
 	    this._userType = load ? name._userType : 1; // 1 is a basic user, 2 is an admin
-        this._playerGames = load ? name._playerGames : [];
+        this._userGames = load ? name._userGames : [];
         this._numWin = load ? name._numWin : 0;
 	    this._numLoss = load ? name._numLoss : 0;
         this._overallRatio = load ? name._overallRatio : 0;
@@ -57,7 +57,18 @@ module.exports = class Account
     {
     	this._userType = type;
     }
-
+	get userGames()
+	{
+		return this._userGames;
+	}
+	get userWins()
+	{
+		return this._numWin;
+	}
+	get userLoss()
+	{
+		return this._numLoss;
+	}
 
     /**
      * setPlayerStats( player )
@@ -81,7 +92,7 @@ module.exports = class Account
             this._numLoss += 1;
 
         this._overallRatio= this._numWin / this._numLoss;
-        this._playerGames.push(gameStat);
+        this._userGames.push(gameStat);
         this.calculateBestGame();
     }
 
@@ -109,13 +120,13 @@ module.exports = class Account
 		var Skill=0;
 		this._userSkillLevel=0;
 
-		for(var i= 0; i< this._playerGames.length; i++)
+		for(var i= 0; i< this._userGames.length; i++)
 		{
-			this._userSkillLevel += this._playerGames[i].gameSkill;
-			if(this._playerGames[i].gameResult == 0)
+			this._userSkillLevel += this._userGames[i].gameSkill;
+			if(this._userGames[i].gameResult == 0)
 				i++;
-			else if(Skill < this._playerGames[i].gameSkill){
-				Skill= this._playerGames[i].gameSkill;
+			else if(Skill < this._userGames[i].gameSkill){
+				Skill= this._userGames[i].gameSkill;
 				this._userBestGame= i;
 			}
 		}

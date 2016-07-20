@@ -215,6 +215,9 @@ app.ws(routes.joinHotseatGame, hasParams, function(ws, request) {
 	controllers.GameController.hotseatWsAction(ws, request, db);
 });
 
+app.get(routes.account, function(request,response){
+	controllers.AccountController.indexAction(request, response, db);
+});
 /*
  * -------- ERROR HANDLING
  */

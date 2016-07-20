@@ -8,6 +8,7 @@ module.exports = {
 	user: [
 		'/lobbies',
 		'/lobbies/.*',
+		'/account',
 	],
 
 

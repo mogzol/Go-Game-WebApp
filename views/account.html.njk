@@ -1,0 +1,41 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %} Account {% endblock %}
+
+{%  block content %}
+	<div class="row">
+
+		<div class="col-md-6">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Account Information
+				</div>
+				<div class="panel-body" id="accountInfo" >
+					<p> Name: {{ userName }} </p>
+					<p> Email: {{ userEmail }} </p>
+					<p> Account Type: {{ userType }} </p>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Account Game Stats
+				</div>
+				<div class="panel-body" id="accountInfo" >
+					<p> Played Games: {{ playerGames }} </p>
+					<p> Games won: {{ numWin }} </p>
+					<p> Games lost: {{ numLoss }} </p>
+					<p> Overall Ratio: {{ ratio }} </p>
+					<p> Overall Skill: {{ userSkill }} </p>
+					<p> Best Game: {{ userBestGame }}</p>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+{%  endblock %}
+
+
