@@ -13,23 +13,11 @@
 
 	<div class="row">
 		<div class="col-md-8 col-md-offset-2">
-			<div id="board" style="font-family: monospace; font-size: 3em">
-
+			<div style="border: 3px solid black; border-radius:5px; background-color: #DBB15B; padding: 5px">
+				<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1000 1000" id="board"></svg>
 			</div>
 
-			<div id="current_turn"></div>
-
-			<div class="input-group">
-				<label for="x">X Coord</label>
-				<input id="x" class="form-control" type="text">
-			</div>
-
-			<div class="input-group">
-				<label for="y">Y Coord</label>
-				<input id="y" class="form-control" type="text">
-			</div>
-
-			<button id="send" class="btn btn-default">Send Move</button>
+			Current turn: <strong id="current_turn"></strong>
 		</div>
 	</div>
 
@@ -41,23 +29,11 @@
 {% endblock %}
 
 {% block javascript %}
+	<script src="/js/boardDrawer.js"></script>
 	<script>
 		var $board, $messages, $currentTurn, $send, $x, $y;
 
 		var currentTurn = 1;
-
-		function updateBoard(board) {
-			var boardString = '';
-
-			board.forEach(function(row) {
-				row.forEach(function(cell) {
-					boardString += cell + ' ';
-				});
-				boardString += '<br>';
-			});
-
-			$board.html(boardString);
-		}
 
 		function addError(error) {
 			$messages.append($('<div>').append($('<em class="text-danger">').text(error)));
@@ -98,7 +74,7 @@
 				}
 
 				if (message.board) {
-					updateBoard(message.board);
+					boardDrawer.drawBoard(message.board, $board, currentTurn);
 				}
 			};
 
@@ -112,11 +88,9 @@
 				window.onbeforeunload = null;
 			};
 
-			// Handle sending messages
-			$send.on('click', function() {
-				gameSocket.send(JSON.stringify({move: {x: parseInt($x.val()), y: parseInt($y.val())}, color: currentTurn}));
-				$x.val('');
-				$y.val('');
+			// Handle token hover
+			boardDrawer.registerEvents($board, function(x, y) {
+				gameSocket.send(JSON.stringify({move: {x: parseInt(x), y: parseInt(y)}, color: currentTurn}));
 			});
 
 			// Warn user when navigating away that they will leave the lobby

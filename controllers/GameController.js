@@ -69,6 +69,9 @@ module.exports = class GameController {
 		// Start the game so that nobody new can connect to it.
 		game.start();
 
+		// Send the initial board
+		ws.send(JSON.stringify({board: game.board, nextTurn: game.turn.color}));
+
 		ws.on('message', function(message) {
 			message = JSON.parse(message);
 			var color;

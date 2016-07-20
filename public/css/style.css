@@ -86,3 +86,7 @@ td:hover span.ban {
 		display: none;
 	}
 }
+
+.token {
+	cursor: pointer;
+}
