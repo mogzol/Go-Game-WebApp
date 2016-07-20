@@ -4,20 +4,22 @@ module.exports= class Player{
 
     constructor(name, color, isAI)
     {
-        this._player = name;            //Name of player
-        this._startDate= Date.now();    //Date player was created
-        this._runningDate= {            //JSON variable to count play time
+	    var load = typeof name === 'object';
+
+        this._player = load ? name._name : name;             //Name of player
+        this._startDate =  load ? name._startDate : Date.now();    //Date player was created
+        this._runningDate = load ? name._runningDate : {            //JSON variable to count play time
             'startTime': null,
             'playTime': null
         };
-        this._color = color;            //Player color (Black/White)
-        this._isAI = isAI || false;     //Is the Player an AI
-        this._score = 0;               //Player Score
-        this._captured = 0;            //Amount of armies captured
-        this._pass = false;             //Does player pass turn
-        this._gameResult = -1;          //Win or Loss
-        this._playerHistory = [];       //Player's moves
-        this._gameSkillLevel = -1;      //Player's Skill level
+        this._color = load ? name._color : color;            //Player color (1 = Black, 2 = White)
+        this._isAI = load ? name._isAI : isAI || false;     //Is the Player an AI
+        this._score = load ? name._score : 0;                //Player Score
+        this._captured = load ? name._captured : 0;             //Amount of armies captured
+        this._pass = load ? name._pass : false;             //Does player pass turn
+        this._gameResult = load ? name._gameResult : -1;          //Win or Loss
+        this._playerHistory = load ? name._playerHistory : [];       //Player's moves
+        this._gameSkillLevel = load ? name._gameSkillLevel : -1;      //Player's Skill level
     }
     /**
      * setPlayerTme()

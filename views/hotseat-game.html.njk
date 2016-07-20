@@ -1,0 +1,133 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Quick Game{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<h1>Hotseat Game</h1>
+		<p class="lead">
+			Choose your type of game below. Note that these games are not saved to your account, and do not affect your
+			player score.
+		</p>
+	</div>
+
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			<div id="board" style="font-family: monospace; font-size: 3em">
+
+			</div>
+
+			<div id="current_turn"></div>
+
+			<div class="input-group">
+				<label for="x">X Coord</label>
+				<input id="x" class="form-control" type="text">
+			</div>
+
+			<div class="input-group">
+				<label for="y">Y Coord</label>
+				<input id="y" class="form-control" type="text">
+			</div>
+
+			<button id="send" class="btn btn-default">Send Move</button>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+			<div id="messages"></div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block javascript %}
+	<script>
+		var $board, $messages, $currentTurn, $send, $x, $y;
+
+		var currentTurn = 1;
+
+		function updateBoard(board) {
+			var boardString = '';
+
+			board.forEach(function(row) {
+				row.forEach(function(cell) {
+					boardString += cell + ' ';
+				});
+				boardString += '<br>';
+			});
+
+			$board.html(boardString);
+		}
+
+		function addError(error) {
+			$messages.append($('<div>').append($('<em class="text-danger">').text(error)));
+		}
+
+		function changeTurn(turn) {
+			if (turn === 1) {
+				$currentTurn.text('Black');
+				currentTurn = turn;
+			} else if (turn === 2) {
+				$currentTurn.text('White');
+				currentTurn = turn;
+			} else {
+				$currentTurn.text('Something\'s fucky');
+			}
+		}
+
+		$(document).ready(function() {
+			// Set up globals
+			$board = $('#board');
+			$messages = $('#messages');
+			$currentTurn = $('#current_turn');
+			$send = $('#send');
+			$x = $('#x');
+			$y = $('#y');
+
+			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinHotseatGame|replace(':id', gameId|urlencode) }}');
+
+			gameSocket.onmessage = function (event) {
+				var message = JSON.parse(event.data);
+
+				if (message.error) {
+					addError(message.error);
+				}
+
+				if (message.nextTurn) {
+					changeTurn(message.nextTurn);
+				}
+
+				if (message.board) {
+					updateBoard(message.board);
+				}
+			};
+
+			gameSocket.onclose = function (event) {
+				if (event.reason) {
+					addError('Connection closed by server: ' + event.reason);
+				} else {
+					addError('Lost connection to server.');
+				}
+
+				window.onbeforeunload = null;
+			};
+
+			// Handle sending messages
+			$send.on('click', function() {
+				gameSocket.send(JSON.stringify({move: {x: parseInt($x.val()), y: parseInt($y.val())}, color: currentTurn}));
+				$x.val('');
+				$y.val('');
+			});
+
+			// Warn user when navigating away that they will leave the lobby
+			window.onbeforeunload = function() {
+				// Newest chrome doesn't allow for custom string, but we'll leave it here for other browsers
+				return "Navigating away from this page will remove you from the game. Are you sure you wish to continue?";
+			};
+
+			window.onunload = function() {
+				gameSocket.close();
+			};
+		});
+	</script>
+{% endblock %}

@@ -203,6 +203,18 @@ app.get(routes.quickGame, function(request, response) {
 	controllers.QuickGameController.indexAction(request, response);
 });
 
+
+
+// Hotseat game start
+app.get(routes.hotseatGame, function(request, response) {
+	controllers.GameController.hotseatAction(request, response);
+});
+
+// Hotseat game websocket request
+app.ws(routes.joinHotseatGame, hasParams, function(ws, request) {
+	controllers.GameController.hotseatWsAction(ws, request, db);
+});
+
 /*
  * -------- ERROR HANDLING
  */

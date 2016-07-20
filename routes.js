@@ -10,6 +10,9 @@ module.exports = {
 
 	quickGame: '/quick',
 
+	hotseatGame: '/game/hotseat',
+	joinHotseatGame: '/game/hotseat/:id',
+
 	lobbies: '/lobbies',
 	createLobby: '/lobbies/create',
 	joinLobby: '/lobbies/lobby/:lobby',

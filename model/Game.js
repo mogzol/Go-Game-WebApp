@@ -1,19 +1,37 @@
 "use strict";
 
+var Player = require('./Player.js');
 
 module.exports= class Game{
 
 	constructor(playerOne, playerTwo, size)
 	{
-		this._playerBlack = playerOne;
-		this._playerWhite = playerTwo;
-		this._turn = this._playerBlack;
-		this._board = this.createBoard(size);
-		this._boardSize = size*size;
-		this._size = size;
-		this._boardHistory = [];
-		this._Graph = this.createGraph();
+		var load = !playerOne instanceof Player; // If playerOne is not a Player, then we are loading from an object
+
+		this._playerBlack = load ? new Player(playerOne._playerBlack) : playerOne;
+		this._playerWhite = load ? new Player(playerOne._playerWhite) : playerTwo;
+		this._turn = load ? playerOne._turn : null;
+		this._board = load ? playerOne._board : this.createBoard(size);
+		this._boardSize = load ? playerOne._boardSize : size*size;
+		this._size = load ? playerOne._size : size;
+		this._boardHistory = load ? playerOne._boardHistory : [];
+		this._Graph = load ? playerOne._Graph : this.createGraph();
 	}
+
+	/**
+	 * Starts the game
+	 */
+	start() {
+		this._turn = this._playerBlack;
+	}
+
+	/**
+	 * @returns {boolean} Whether or not the game is started
+	 */
+	get started() {
+		return this._turn !== null;
+	}
+
 	/**
 	 * Creates new board of size N
 	 * @param n board size
@@ -96,9 +114,11 @@ module.exports= class Game{
 	}
 
 	/**
-	 * isValid( r, c, color) checks if move is allowed
+	 * isValid( r, c, color) checks if move is allowed. Returns True or an error message string
 	 */
-	isValid(r,c, color) {
+	isValid(r, c, color) {
+		if (!Number.isInteger(r) || !Number.isInteger(c) || !Number.isInteger(color))
+			return 'Invalid input';
 
 		var vertex = (r * this._size) + c;
 		var lastMove = this.lastMove;
@@ -112,7 +132,7 @@ module.exports= class Game{
 		else if(this._Graph[vertex][4] !== 0)
 		{
 			console.log("[isValid] Already owned, make new move");
-			return false;
+			return 'Already owned, make new move';
 		}
 		else if(this._Graph[vertex][5] === color)
 		{
@@ -128,7 +148,7 @@ module.exports= class Game{
 		else             //Can get rid of this case, leaving just in case required for territory counting
 		{
 			console.log("[isValid] ______LAST IF CASE______");
-			return false;
+			return 'BLEEP BLOOP';
 		}
 	}
 
@@ -195,13 +215,18 @@ module.exports= class Game{
 	 * @param c coordinate for colm
 	 * @param r coordinate for row
 	 * @param player is the player making the move
-	 * @return {*| Boolean} returns true/false if move was made or not
+	 * @return {Boolean|String} returns true if move was made or an error string if it was not
 	 */
-	makeMove(r,c)
+	makeMove(c, r, player)
 	{
+		if (player.color !== this.turn.color) {
+			return 'It is not that player\'s turn';
+		}
+
 		var color = this.turn.color;
 		var vertex = (r * this._size) + c;
-		if( this.isValid(r,c,color) )
+		var valid = this.isValid(r,c,color);
+		if( valid === true )
 		{
 			var move = {
 				player: color,
@@ -211,7 +236,7 @@ module.exports= class Game{
 					row: r,
 					col: c
 				}
-			}
+			};
 			this._board[r][c] = color;
 			this._Graph[vertex][4] = color;
 			//console.log("[makeMove] Before updateGraph");
@@ -221,8 +246,7 @@ module.exports= class Game{
 			this.switchTurn();
 			return true;                                    //change to a kind of alert
 		} else {
-			console.log('Invalid move, make a new move');
-			return false;
+			return valid;
 		}
 	}
 	/**
@@ -346,42 +370,62 @@ module.exports= class Game{
 			this._playerBlack.start();
 		}
 	}
+
 	get turn()
 	{
 		return this._turn;
 	}
+
 	get board()
 	{
 		return this._board;
 	}
+
 	get boardHistory()
 	{
 		return this._boardHistory;
 	}
+
 	get lastMove()
 	{
 		return this._boardHistory.pop();
 	}
+
 	get whiteTaken()
 	{
 		return this._whiteTaken;
 	}
+
 	get blackTaken()
 	{
 		return this._blackTaken;
 	}
+
 	get graph()
 	{
 		return this._Graph;
 	}
+
 	get boardSize()
 	{
 		return this._boardSize;
 	}
+
 	get size()
 	{
 		return this._size;
 	}
+
+	get playerBlack()
+	{
+		return this._playerBlack;
+	}
+
+	get playerWhite()
+	{
+		return this._playerWhite;
+	}
+
 
 	/**
 	 * Prints out the games graph
@@ -410,4 +454,4 @@ module.exports= class Game{
 		}
 		return str;
 	}
-}
+};
