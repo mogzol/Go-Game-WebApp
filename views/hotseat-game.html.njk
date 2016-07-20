@@ -5,25 +5,25 @@
 {% block content %}
 	<div class="page-header">
 		<h1>Hotseat Game</h1>
-		<p class="lead">
-			Choose your type of game below. Note that these games are not saved to your account, and do not affect your
-			player score.
-		</p>
 	</div>
 
 	<div class="row">
-		<div class="col-md-8 col-md-offset-2">
-			<div style="border: 3px solid black; border-radius:5px; background-color: #DBB15B; padding: 5px">
+		{# The status column is first even though it is on the right side so that it is on top on small screens #}
+		<div class="col-md-5 col-md-push-7">
+			<div class="panel panel-default">
+				<div class="panel-heading">Hotseat Game</div>
+				<div class="panel-body">
+					Current turn: <strong id="current_turn"></strong>
+					<hr>
+					<div id="messages"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-7 col-md-pull-5">
+			<div style="border: 3px solid black; border-radius:5px; background-color: #DBB15B; padding: 5px; margin-bottom: 10px;">
 				<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1000 1000" id="board"></svg>
 			</div>
-
-			Current turn: <strong id="current_turn"></strong>
-		</div>
-	</div>
-
-	<div class="row">
-		<div class="col-md-12">
-			<div id="messages"></div>
 		</div>
 	</div>
 {% endblock %}
