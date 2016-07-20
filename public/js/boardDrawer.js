@@ -11,9 +11,9 @@ boardDrawer.getColor = function(boardVal, currentTurn) {
 	}
 };
 
-boardDrawer.makeJqToken = function(x, y, r, color, opacity, xCoord, yCoord) {
-	return $('<circle class="token" cx="' + x + '" cy="' + y + '" r="' + r + '" stroke="black" stroke-width="3" ' +
-		'fill="'+ color + '" opacity="' + opacity + '" data-x="' + xCoord + '" data-y="' + yCoord + '" />');
+boardDrawer.makeJqToken = function(x, y, r, color, real, xCoord, yCoord) {
+	return $('<circle ' + (real ? '' : 'class="token" ') + 'cx="' + x + '" cy="' + y + '" r="' + r + '" stroke="black" stroke-width="3" ' +
+		'fill="'+ color + '" opacity="' + (real ? '1' : '0') + '" data-x="' + xCoord + '" data-y="' + yCoord + '" />');
 };
 
 boardDrawer.makeJqLine = function(x1, y1, x2, y2) {
@@ -50,10 +50,10 @@ boardDrawer.drawBoard = function(board, $board, currentTurn) {
 	// and make it 0 opacity, so that on hover we can show it
 	for (var y = 0; y < size; y++) {
 		for (var x = 0; x < size; x++) {
-			var opacity = board[y][x] ? 1 : 0;
+			var real = Boolean(board[y][x]);
 			var color = boardDrawer.getColor(board[y][x], currentTurn);
 
-			$newBoard.append(boardDrawer.makeJqToken(cellCenter + cellSize * x, cellCenter + cellSize * y, cellSize / 2.2, color, opacity, x, y));
+			$newBoard.append(boardDrawer.makeJqToken(cellCenter + cellSize * x, cellCenter + cellSize * y, cellSize / 2.2, color, real, x, y));
 		}
 	}
 
@@ -63,7 +63,7 @@ boardDrawer.drawBoard = function(board, $board, currentTurn) {
 boardDrawer.registerEvents = function($board, tokenClickCb) {
 	$board.on('mouseenter', '.token', function () {
 		var $this = $(this);
-		$this.data('orig-opacity', $this.attr('opacity')).attr('opacity', 1);
+		$this.data('orig-opacity', $this.attr('opacity')).attr('opacity', 0.5);
 	}).on('mouseleave', '.token', function () {
 		var $this = $(this);
 		$this.attr('opacity', $this.data('orig-opacity'));

@@ -114,6 +114,10 @@ module.exports = class GameController {
 					ws.send(JSON.stringify({nextTurn: game.turn.color})); // Wrong color passed, just tell client to switch to other color
 				}
 			}
+
+			if (message.message) {
+				ws.send(JSON.stringify({message: {by: game.turn.player, msg: message.message}}));
+			}
 		});
 
 		ws.on('close', function() {

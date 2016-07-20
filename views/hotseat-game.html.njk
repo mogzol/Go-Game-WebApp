@@ -15,13 +15,20 @@
 				<div class="panel-body">
 					Current turn: <strong id="current_turn"></strong>
 					<hr>
-					<div id="messages"></div>
+					<strong><em>Messages:</em></strong>
+					<div class="game-messages" id="messages"></div>
+					<div class="input-group">
+						<input id="message" class="form-control" type="text" placeholder="Enter Message">
+						<span class="input-group-btn">
+							<button id="send" class="btn btn-default">Send</button>
+						</span>
+					</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="col-md-7 col-md-pull-5">
-			<div style="border: 3px solid black; border-radius:5px; background-color: #DBB15B; padding: 5px; margin-bottom: 10px;">
+			<div class="board-container">
 				<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1000 1000" id="board"></svg>
 			</div>
 		</div>
@@ -31,12 +38,20 @@
 {% block javascript %}
 	<script src="/js/boardDrawer.js"></script>
 	<script>
-		var $board, $messages, $currentTurn, $send, $x, $y;
+		var $board, $messages, $message, $currentTurn, $send, $x, $y;
 
 		var currentTurn = 1;
 
-		function addError(error) {
-			$messages.append($('<div>').append($('<em class="text-danger">').text(error)));
+		function addMessage(message) {
+			var $message;
+			if (message.by === null) {
+				$message = $('<div>').append($('<em class="text-danger">').text(message.msg));
+			} else {
+				$message = $('<div>').append($('<strong>').text(message.by + ': ')).append($('<span>').text(message.msg));
+			}
+
+			$messages.append($message);
+			$messages.scrollTop($messages.prop('scrollHeight')); // Scroll to bottom of list
 		}
 
 		function changeTurn(turn) {
@@ -55,6 +70,7 @@
 			// Set up globals
 			$board = $('#board');
 			$messages = $('#messages');
+			$message = $('#message');
 			$currentTurn = $('#current_turn');
 			$send = $('#send');
 			$x = $('#x');
@@ -65,8 +81,12 @@
 			gameSocket.onmessage = function (event) {
 				var message = JSON.parse(event.data);
 
+				if (message.message) {
+					addMessage(message.message);
+				}
+
 				if (message.error) {
-					addError(message.error);
+					addMessage({by: null, msg: message.error});
 				}
 
 				if (message.nextTurn) {
@@ -88,9 +108,22 @@
 				window.onbeforeunload = null;
 			};
 
-			// Handle token hover
+			// Handle token hover/click
 			boardDrawer.registerEvents($board, function(x, y) {
 				gameSocket.send(JSON.stringify({move: {x: parseInt(x), y: parseInt(y)}, color: currentTurn}));
+			});
+
+			// Handle sending messages
+			$send.on('click', function() {
+				gameSocket.send(JSON.stringify({message: $message.val()}));
+				$message.val('');
+			});
+
+			// Send on enter
+			$message.keyup(function(event){
+				if (event.keyCode === 13){
+					$send.click();
+				}
 			});
 
 			// Warn user when navigating away that they will leave the lobby
