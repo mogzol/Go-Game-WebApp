@@ -2,6 +2,7 @@
 
 var routes = require('../routes.js');
 var Lobby = require('../model/Lobby.js');
+var GameController = require('./GameController.js');
 var WebSocket = require('ws');
 
 var lobbies = {};
@@ -79,19 +80,6 @@ module.exports = class LobbyController {
 			return;
 		}
 
-		// Updates the lobby and sends it to all of the lobbies users
-		function pushUpdate() {
-			// For each user in this lobby, send them the updated lobby
-			for (var user in lobbyConnections[name]) {
-				if (!lobbyConnections[name].hasOwnProperty(user))
-					continue; // skip loop if the property is from prototype
-
-				ws = lobbyConnections[name][user];
-				if (ws && ws.readyState == WebSocket.OPEN)
-					ws.send(JSON.stringify({lobby: lobby}));
-			}
-		}
-
 		// First we'll try to add the user to the lobby
 		try {
 			lobby.addUser(user);
@@ -104,6 +92,19 @@ module.exports = class LobbyController {
 		if (!lobbyConnections[name])
 			lobbyConnections[name] = {};
 		lobbyConnections[name][user] = ws;
+
+		// Updates the lobby and sends it to all of the lobbies users
+		function pushUpdate() {
+			// For each user in this lobby, send them the updated lobby
+			for (var user in lobbyConnections[name]) {
+				if (!lobbyConnections[name].hasOwnProperty(user))
+					continue; // skip loop if the property is from prototype
+
+				ws = lobbyConnections[name][user];
+				if (ws && ws.readyState == WebSocket.OPEN)
+					ws.send(JSON.stringify({lobby: lobby}));
+			}
+		}
 
 		// And then push the updated lobby to all lobby members
 		pushUpdate();
@@ -137,6 +138,53 @@ module.exports = class LobbyController {
 				}
 
 				pushUpdate();
+			}
+
+			if (message.start && lobby.owner === user) {
+				lobby.addMessage(null, 'Starting Game...');
+
+				var size = parseInt(message.start.size);
+				var ai = message.start.ai;
+
+				lobby.addMessage(null, 'Splitting users into groups of 2...');
+
+				var groups = [[]];
+
+				for (var i = 0; i < lobby.users.length; i++) {
+					if (groups[groups.length - 1].length < 2) {
+						groups[groups.length - 1].push(lobby.users[i]);
+					} else {
+						groups.push([lobby.users[i]]);
+					}
+				}
+
+				// If the last group only has 1 user, add an AI
+				if (groups[groups.length - 1].length < 2) {
+					groups[groups.length - 1].push({ai: true, mode: ai});
+				}
+
+				lobby.addMessage(null, 'Creating games...');
+
+				// Push a last minute update before everyone disconnects
+				pushUpdate();
+
+				for (var group of groups) {
+					var id = GameController.generateLobbyGame(group[0], group[1], size);
+
+					// If ID is false, then the size or AI is invalid
+					if (id === false) {
+						lobby.addMessage(null, 'ERROR: Game parameters are invalid. Please try again with valid selections.');
+						pushUpdate();
+						return;
+					}
+
+					// Tell group members to join the game
+					for (var username of group) {
+						if (lobbyConnections[name] && lobbyConnections[name][username]) {
+							lobbyConnections[name][username].close(4000, id);
+						}
+					}
+				}
 			}
 		});
 

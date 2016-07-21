@@ -92,12 +92,56 @@
 			</div>
 		</div>
 	</div>
+
+	<div id="game_options" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Start Game</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col col-sm-6">
+							<div class="form-group">
+								<label for="size">Board Size</label>
+								<select name="size" id="size" class="form-control" required>
+									<option value="9">9x9</option>
+									<option value="11">11x11</option>
+									<option value="13">13x13</option>
+									<option value="15">15x15</option>
+									<option value="17">17x17</option>
+									<option value="19" selected>19x19 (Standard)</option>
+									<option value="21">21x21</option>
+								</select>
+							</div>
+						</div>
+						<div class="col col-sm-6">
+							<div class="form-group">
+								<label for="ai">AI Setting <small>(if applicable)</small></label>
+								<select name="ai" id="ai" class="form-control" required>
+									<option value="random">Random Token Placement</option>
+									<option value="maxLibs">Maximize Liberties</option>
+									<option value="offensive">Offensive</option>
+									<option value="defensive">Defensive</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+					<button type="submit" id="start_game" class="btn btn-success" data-dismiss="modal">Start Game</button>
+				</div>
+			</div>
+		</div>
+	</div>
 {% endblock %}
 
 {% block javascript %}
 <script>
 	var $userList, $loader, $lobby, $messageList, $message, $send, $ownerModal, $giveOwnerName, $giveOwner, $kickModal,
-			$kickName, $kick, $banModal, $banName, $ban, $start;
+			$kickName, $kick, $banModal, $banName, $ban, $start, $startModal, $size, $ai, $startGame;
 
 	function updateLobby(lobby) {
 		var isOwner = lobby._owner === '{{ session.username }}';
@@ -163,6 +207,10 @@
 		$banName = $('#banned_user');
 		$ban = $('#ban');
 		$start = $('#start');
+		$startModal = $('#game_options');
+		$size = $('#size');
+		$ai = $('#ai');
+		$startGame = $('#start_game');
 
 		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', lobby.name|urlencode) }}');
 
@@ -175,6 +223,12 @@
 		};
 
 		lobbySocket.onclose = function (event) {
+			// If the close event code is 4000, then we are connecting to a game
+			if (event.code === 4000 && event.reason) {
+				window.location.href = '{{ routes.joinGame|replace(':id', '') }}' + encodeURIComponent(event.reason);
+			}
+
+
 			$loader.addClass('text-danger');
 
 			if (event.reason) {
@@ -217,6 +271,10 @@
 			$banModal.modal();
 		});
 
+		$start.on('click', function() {
+			$startModal.modal();
+		});
+
 		$giveOwner.on('click', function() {
 			lobbySocket.send(JSON.stringify({owner: $giveOwnerName.text()}));
 		});
@@ -227,6 +285,16 @@
 
 		$ban.on('click', function() {
 			lobbySocket.send(JSON.stringify({ban: $banName.text()}));
+		});
+
+		$startGame.on('click', function () {
+			var size = $size.val();
+			var ai = $ai.val();
+
+			if (!size || !ai)
+				alert('Please select a board size and AI difficulty');
+			else
+				lobbySocket.send(JSON.stringify({start: {size: size, ai: ai}}));
 		});
 
 		// Warn user when navigating away that they will leave the lobby

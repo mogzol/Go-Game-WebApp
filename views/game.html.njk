@@ -4,14 +4,14 @@
 
 {% block content %}
 	<div class="page-header">
-		<h1>Hotseat Game</h1>
+		<h1>Lobby Game</h1>
 	</div>
 
 	<div class="row">
 		{# The status column is first even though it is on the right side so that it is on top on small screens #}
 		<div class="col-md-5 col-md-push-7">
 			<div class="panel panel-default">
-				<div class="panel-heading">Hotseat Game</div>
+				<div class="panel-heading">Lobby Game</div>
 				<div class="panel-body">
 					Current turn: <strong id="current_turn"></strong>
 					<hr>
@@ -41,6 +41,8 @@
 		var $board, $messages, $message, $currentTurn, $send, $x, $y;
 
 		var currentTurn = 1;
+		var playerBlack = '';
+		var playerWhite = '';
 
 		function addMessage(message) {
 			var $message;
@@ -56,10 +58,10 @@
 
 		function changeTurn(turn) {
 			if (turn === 1) {
-				$currentTurn.text('Black');
+				$currentTurn.text(playerBlack);
 				currentTurn = turn;
 			} else if (turn === 2) {
-				$currentTurn.text('White');
+				$currentTurn.text(playerWhite);
 				currentTurn = turn;
 			} else {
 				$currentTurn.text('Something\'s fucky');
@@ -76,7 +78,7 @@
 			$x = $('#x');
 			$y = $('#y');
 
-			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinHotseatGame|replace(':id', gameId|urlencode) }}');
+			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinGame|replace(':id', gameId|urlencode) }}');
 
 			gameSocket.onmessage = function (event) {
 				var message = JSON.parse(event.data);
@@ -87,6 +89,14 @@
 
 				if (message.error) {
 					addMessage({by: null, msg: message.error});
+				}
+
+				if (message.black) {
+					playerBlack = message.black._player;
+				}
+
+				if (message.white) {
+					playerWhite = message.white._player;
 				}
 
 				if (message.nextTurn) {

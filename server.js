@@ -174,6 +174,11 @@ app.post(routes.createAccount, parseForm, csrfProtection, function(request, resp
 	controllers.LoginController.addAccountAction(request, response, db);
 });
 
+// Account page
+app.get(routes.account, function(request,response){
+	controllers.AccountController.indexAction(request, response, db);
+});
+
 
 
 // Lobbies
@@ -215,9 +220,19 @@ app.ws(routes.joinHotseatGame, hasParams, function(ws, request) {
 	controllers.GameController.hotseatWsAction(ws, request, db);
 });
 
-app.get(routes.account, function(request,response){
-	controllers.AccountController.indexAction(request, response, db);
+
+
+// Lobby game start
+app.get(routes.joinGame, hasParams, function (request, response) {
+	controllers.GameController.lobbyGameAction(request, response);
 });
+
+// Lobby game websocket
+app.ws(routes.joinGame, hasParams, function (ws, request) {
+	controllers.GameController.lobbyWsAction(ws, request);
+});
+
+
 /*
  * -------- ERROR HANDLING
  */

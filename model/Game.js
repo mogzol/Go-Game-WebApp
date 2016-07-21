@@ -348,6 +348,7 @@ module.exports= class Game{
 	{
 		this.calScore();
 		var totalGameTime = this._playerWhite.playTime + this._playerBlack.playTime;
+		this._turn = null;
 
 		if(!this._playerBlack.isAI)
 			this._playerBlack.skill = (this._playerBlack.score + this._playerBlack.captured) + (this._playerBlack.playTime / totalGameTime);

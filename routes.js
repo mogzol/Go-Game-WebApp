@@ -13,6 +13,8 @@ module.exports = {
 	hotseatGame: '/game/hotseat',
 	joinHotseatGame: '/game/hotseat/:id',
 
+	joinGame: '/game/:id',
+
 	lobbies: '/lobbies',
 	createLobby: '/lobbies/create',
 	joinLobby: '/lobbies/lobby/:lobby',
