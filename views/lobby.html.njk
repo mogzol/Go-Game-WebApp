@@ -6,7 +6,7 @@
 	<div class="row">
 		<div class="col-md-offset-1 col-md-10">
 			<div class="panel panel-default">
-				<div class="panel-heading"><h4>{{ lobby.name }} <small>Lobby</small></h4></div>
+				<div class="panel-heading"><h4>{{ name }} <small>Lobby</small></h4></div>
 				<div class="panel-body">
 					<div id="loader" class="text-center">Joining lobby, please wait...</div>
 					<div class="row" id="lobby" style="display:none">
@@ -212,7 +212,7 @@
 		$ai = $('#ai');
 		$startGame = $('#start_game');
 
-		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', lobby.name|urlencode) }}');
+		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', id|urlencode) }}');
 
 		lobbySocket.onmessage = function (event) {
 			var message = JSON.parse(event.data);

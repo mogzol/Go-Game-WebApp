@@ -1,5 +1,7 @@
 function boardDrawer() {}
 
+boardDrawer.currentBoard = [];
+
 boardDrawer.getColor = function(boardVal, currentTurn) {
 	if (boardVal === 1) {
 		return '#333';
@@ -46,18 +48,26 @@ boardDrawer.drawBoard = function(board, $board, currentTurn) {
 		$newBoard.append(boardDrawer.makeJqLine(cellCenter, cellCenter + cellSize * i, drawSize - cellCenter, cellCenter + cellSize * i));
 	}
 
-	// Draw a token at each spot on the board, if there shouldn't be a token there, use the current turn color
-	// and make it 0 opacity, so that on hover we can show it
+	// Draw a token at each spot on the board, if there shouldn't be a token there, use the current turn color and make
+	// it 0 opacity, so that on hover we can show it. If currentTurn is null, do not draw the blank tokens.
 	for (var y = 0; y < size; y++) {
 		for (var x = 0; x < size; x++) {
 			var real = Boolean(board[y][x]);
-			var color = boardDrawer.getColor(board[y][x], currentTurn);
 
-			$newBoard.append(boardDrawer.makeJqToken(cellCenter + cellSize * x, cellCenter + cellSize * y, cellSize / 2.2, color, real, x, y));
+			if (real || currentTurn !== null) {
+				var color = boardDrawer.getColor(board[y][x], currentTurn);
+				$newBoard.append(boardDrawer.makeJqToken(cellCenter + cellSize * x, cellCenter + cellSize * y, cellSize / 2.2, color, real, x, y));
+			}
 		}
 	}
 
+	boardDrawer.currentBoard = board;
 	$board.html($newBoard.html()); // Refresh the board display
+};
+
+boardDrawer.redraw = function ($board, currentTurn) {
+	if (boardDrawer.currentBoard)
+		boardDrawer.drawBoard(boardDrawer.currentBoard, $board, currentTurn);
 };
 
 boardDrawer.registerEvents = function($board, tokenClickCb) {

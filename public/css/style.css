@@ -116,3 +116,26 @@ td:hover span.ban {
 	padding: 5px;
 	margin-bottom: 10px;
 }
+
+.player-username {
+	font-size: 1.3em;
+	font-weight: bold;
+}
+
+.game-left-player {
+	border-right: 1px solid #eee;
+}
+
+.not-turn:not('.in-modal') {
+	opacity: 0.5;
+}
+
+.pass-container {
+	width: 50%;
+	margin-top: 10px;
+}
+
+#game_over_header {
+	margin-top: 0;
+	margin-bottom:20px;
+}

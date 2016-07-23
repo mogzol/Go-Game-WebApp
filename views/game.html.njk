@@ -13,7 +13,30 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">Lobby Game</div>
 				<div class="panel-body">
-					Current turn: <strong id="current_turn"></strong>
+					<div class="row">
+						<div class="player-black col-xs-6 game-left-player">
+							<h4><span class="glyphicon glyphicon-user"></span> Black</h4>
+							<span class="player-username">Loading...</span> <small class="player-you" style="display:none">(you)</small><br>
+							Rating: <span class="player-rating">...</span>
+						</div>
+						<div class="player-white col-xs-6 text-right not-turn">
+							<h4>White <span class="glyphicon glyphicon-user"></span></h4>
+							<span class="player-username">Loading...</span> <small class="player-you" style="display:none">(you)</small><br>
+							Rating: <span class="player-rating">...</span>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6 game-left-player">
+							<div class="pass-container">
+								<button id="black_pass" class="pass btn btn-sm btn-block btn-danger" style="visibility: hidden">Pass</button>
+							</div>
+						</div>
+						<div class="col-xs-6">
+							<div class="pass-container pull-right">
+								<button id="white_pass" class="pass btn btn-sm btn-block btn-danger" style="visibility: hidden">Pass</button>
+							</div>
+						</div>
+					</div>
 					<hr>
 					<strong><em>Messages:</em></strong>
 					<div class="game-messages" id="messages"></div>
@@ -33,16 +56,80 @@
 			</div>
 		</div>
 	</div>
+
+	<div id="game_over" class="modal fade" data-backdrop="static" data-keyboard="false" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Game Over</h4>
+				</div>
+				<div class="modal-body">
+					<h3 id="game_over_header" class="text-center"></h3>
+					<div class="row">
+						<div class="player-black col-xs-6 game-left-player in-modal">
+							<h4><span class="glyphicon glyphicon-user"></span> Black</h4>
+							<span class="player-username">Loading...</span> <small class="player-you" style="display:none">(you)</small><br>
+							Score: <span class="player-score"></span><br>
+							Rating: <span class="player-rating">...</span>
+						</div>
+						<div class="player-white col-xs-6 text-right not-turn in-modal">
+							<h4>White <span class="glyphicon glyphicon-user"></span></h4>
+							<span class="player-username">Loading...</span> <small class="player-you" style="display:none">(you)</small><br>
+							Score: <span class="player-score"></span><br>
+							Rating: <span class="player-rating">...</span>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<a href="{{ routes.lobbies }}" id="next" class="btn btn-success">Return to lobby select</a>
+				</div>
+			</div>
+		</div>
+	</div>
 {% endblock %}
 
 {% block javascript %}
 	<script src="/js/boardDrawer.js"></script>
 	<script>
-		var $board, $messages, $message, $currentTurn, $send, $x, $y;
+		var $board, $messages, $message, $send, $pass, $x, $y, $black, $bUser, $bYou, $bRating, $bPass, $bScore,
+				$white, $wUser, $wYou, $wRating, $wPass, $wScore, $overModal, $overHeader, $next;
 
 		var currentTurn = 1;
+		var playingAs = null;
 		var playerBlack = '';
 		var playerWhite = '';
+
+		function loadBlack(player) {
+			var name = player._player;
+			if (name === '{{ username }}')
+				playingAs = 1;
+
+			playerBlack = name;
+
+			$bUser.text(name);
+			$bRating.text(player._gameSkillLevel);
+
+			if (playingAs === 1) {
+				$bYou.show();
+				$bPass.css('visibility', 'visible');
+			}
+		}
+
+		function loadWhite(player) {
+			var name = player._player;
+			if (name === '{{ username }}')
+				playingAs = 2;
+
+			playerWhite = name;
+
+			$wUser.text(name);
+			$wRating.text(player._gameSkillLevel);
+
+			if (playingAs === 2) {
+				$wYou.show();
+				$wPass.css('visibility', 'visible');
+			}
+		}
 
 		function addMessage(message) {
 			var $message;
@@ -58,13 +145,26 @@
 
 		function changeTurn(turn) {
 			if (turn === 1) {
-				$currentTurn.text(playerBlack);
 				currentTurn = turn;
+				$black.removeClass('not-turn');
+				$bPass.prop('disabled', false);
+				$white.addClass('not-turn');
+				$wPass.prop('disabled', true);
 			} else if (turn === 2) {
-				$currentTurn.text(playerWhite);
 				currentTurn = turn;
+				$white.removeClass('not-turn');
+				$wPass.prop('disabled', false);
+				$black.addClass('not-turn');
+				$bPass.prop('disabled', true);
 			} else {
-				$currentTurn.text('Something\'s fucky');
+				// Game is over
+				currentTurn = null;
+				$black.addClass('not-turn');
+				$bPass.prop('disabled', true);
+				$white.addClass('not-turn');
+				$wPass.prop('disabled', true);
+				$message.prop('disabled', true);
+				$send.prop('disabled', true);
 			}
 		}
 
@@ -73,10 +173,25 @@
 			$board = $('#board');
 			$messages = $('#messages');
 			$message = $('#message');
-			$currentTurn = $('#current_turn');
 			$send = $('#send');
+			$pass = $('.pass');
 			$x = $('#x');
 			$y = $('#y');
+			$black = $('.player-black');
+			$bUser = $('.player-black .player-username');
+			$bYou = $('.player-black .player-you');
+			$bRating = $('.player-black .player-rating');
+			$bScore = $('.player-black .player-score');
+			$bPass = $('#black_pass');
+			$white = $('.player-white');
+			$wUser = $('.player-white .player-username');
+			$wYou = $('.player-white .player-you');
+			$wRating = $('.player-white .player-rating');
+			$wScore = $('.player-white .player-score');
+			$wPass = $('#white_pass');
+			$overModal = $('#game_over');
+			$overHeader = $('#game_over_header');
+			$next = $('#next');
 
 			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinGame|replace(':id', gameId|urlencode) }}');
 
@@ -92,20 +207,58 @@
 				}
 
 				if (message.black) {
-					playerBlack = message.black._player;
+					loadBlack(message.black);
 				}
 
 				if (message.white) {
-					playerWhite = message.white._player;
+					loadWhite(message.white);
 				}
 
-				if (message.nextTurn) {
+				if (message.nextTurn !== undefined) { // nextTurn can be null
 					changeTurn(message.nextTurn);
+
+					if (!message.board) // If there is no board sent in this message, then just redraw the board
+						boardDrawer.redraw($board, currentTurn === playingAs ? currentTurn : null);
+				}
+
+				if (message.pass) {
+					addMessage({by: null, msg: message.pass + ' has passed'})
 				}
 
 				if (message.board) {
-					boardDrawer.drawBoard(message.board, $board, currentTurn);
+					boardDrawer.drawBoard(message.board, $board, currentTurn === playingAs ? currentTurn : null);
 				}
+
+				if (message.lobby) {
+					$next.attr('href', '{{ routes.joinLobby|replace(':lobby', '') }}' + encodeURIComponent(message.lobby))
+							.text('Proceed to next round');
+				}
+
+				if (message.done) {
+					var black = message.done.black;
+					var white = message.done.white;
+
+					if ((playingAs === 1 && black._score > white._score) || (playingAs === 2 && white._score >= black._score)) {
+						$overHeader.text('Congratulations, you won!');
+					} else {
+						$overHeader.text('Sorry, you lost. Better luck next time!');
+					}
+
+					$bScore.text(black._score);
+					$wScore.text(white._score);
+
+					var bSkill = black._gameSkillLevel;
+					var bDifference = bSkill - parseInt($bRating.first().text());
+					$bRating.text(bSkill + (bDifference > -1 ? ' (+' : ' (') + bDifference + ')');
+
+					var wSkill = white._gameSkillLevel;
+					var wDifference = wSkill - parseInt($wRating.first().text());
+					$wRating.text(wSkill + (wDifference > -1 ? ' (+' : ' (') + wDifference + ')');
+
+					$overModal.modal();
+				}
+
+				console.log(message);
 			};
 
 			gameSocket.onclose = function (event) {
@@ -120,7 +273,11 @@
 
 			// Handle token hover/click
 			boardDrawer.registerEvents($board, function(x, y) {
-				gameSocket.send(JSON.stringify({move: {x: parseInt(x), y: parseInt(y)}, color: currentTurn}));
+				gameSocket.send(JSON.stringify({move: {x: parseInt(x), y: parseInt(y)}}));
+			});
+
+			$pass.on('click', function() {
+				gameSocket.send(JSON.stringify({pass: true}));
 			});
 
 			// Handle sending messages

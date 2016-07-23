@@ -5,6 +5,7 @@ var WebSocket = require('ws');
 
 var Player = require('../model/Player.js');
 var Game = require('../model/Game.js');
+var LobbyController = require('./LobbyController.js');
 
 var activeGames = {};
 var gameConnections = {};
@@ -29,14 +30,15 @@ module.exports = class GameController {
 	/**
 	 * Sets up a game and returns the game ID
 	 *
-	 * @param {string}        user1 The username for the user playing as black
-	 * @param {string|object} user2 The username for the user playing as white, or an object if this is an AI.
-	 *                              AI object should look like: {ai: true, mode: 'MODE'}. Replace MODE with the ai mode.
-	 * @param {int}           size  The board size
+	 * @param {string}        user1   The username for the user playing as black
+	 * @param {string|object} user2   The username for the user playing as white, or an object if this is an AI. The AI
+	 *                                object should look like: {ai: true, mode: 'MODE'}. Replace MODE with the ai mode.
+	 * @param {int}           size    The board size
+	 * @param {string|null}   lobbyId The id for the lobby to reconnect to, or null to not reconnect.
 	 *
 	 * @returns {string|boolean} The ID of the game, or false if there was an error creating the game
 	 */
-	static generateLobbyGame(user1, user2, size) {
+	static generateLobbyGame(user1, user2, size, lobbyId) {
 		// Make sure size is valid
 		if (!Number.isInteger(size) || size % 2 !== 1 || size < minBoardSize || size > maxBoardSize)
 			return false;
@@ -55,13 +57,22 @@ module.exports = class GameController {
 		}
 
 		// Set up the game
-		var game = new Game(player1, player2, size);
+		var id = this.generateId();
+		var game = new Game(id, player1, player2, size, lobbyId);
 
 		// Add the game to the array
-		var id = this.generateId();
 		activeGames[id] = game;
 
-		return id;
+		return game;
+	}
+
+	/**
+	 * Delete a game from the game array
+	 *
+	 * @param id
+	 */
+	static deleteGame(id) {
+		delete activeGames[id];
 	}
 
 	static lobbyGameAction(request, response) {
@@ -75,6 +86,7 @@ module.exports = class GameController {
 
 		response.render('views/game.html.njk', {
 			gameId: gameId,
+			username: request.session.username,
 		})
 	}
 
@@ -82,7 +94,6 @@ module.exports = class GameController {
 		var gameId = request.params.id;
 		var game = activeGames[gameId];
 		var user = request.session.username;
-		var passes = 0;
 
 		if (!game) {
 			ws.close(undefined, 'The requested game doesn\'t exist.');
@@ -134,8 +145,33 @@ module.exports = class GameController {
 
 		// Sends the board to both game members
 		function pushUpdate(data) {
+			if (gameConnections[gameId]) {
+				for (var ws of gameConnections[gameId]) {
+					if (ws)
+						ws.send(JSON.stringify(data));
+				}
+			}
+		}
+
+		function endGame() {
+			game.finishGame();
+			var black = game.playerBlack;
+			var white = game.playerWhite;
+
+			// If the game has a lobby, tell the winner to re-connect
+			if (black.score > white.score && gameConnections[gameId] && gameConnections[gameId][0]) {
+				gameConnections[gameId][0].send(JSON.stringify({lobby: game.lobby}));
+			} else if (gameConnections[gameId] && gameConnections[gameId][1]) {
+				gameConnections[gameId][1].send(JSON.stringify({lobby: game.lobby}));
+			}
+
+			// Send the game over message
+			pushUpdate({nextTurn: null, done: {black: black, white: white}});
+
+			// And close the connections
 			for (var ws of gameConnections[gameId]) {
-				ws.send(JSON.stringify(data));
+				if (ws)
+					ws.close(undefined, 'Game Over');
 			}
 		}
 
@@ -150,7 +186,7 @@ module.exports = class GameController {
 						ws.send(JSON.stringify({error: result}));
 					} else {
 						// If a move is made, we can reset passes to 0
-						passes = 0;
+						game.passes = 0;
 
 						// And send the new board and change the turn
 						pushUpdate({board: game.board, nextTurn: game.turn.color});
@@ -162,16 +198,10 @@ module.exports = class GameController {
 
 			if (message.pass) {
 				if (game.turn.player === user) {
-					passes++;
+					game.passes++;
 
-					if (passes > 1) {
-						game.finishGame();
-
-						// TODO: Proper finish game, if there were others in lobby, reconnect the winners, persist player scores to db, etc.
-						pushUpdate({gameOver: true, player1: game.playerBlack, player2: game.playerWhite});
-						for (let ws of gameConnections[gameId]) {
-							ws.close(undefined, 'Game Over');
-						}
+					if (game.passes > 1) {
+						endGame();
 						return;
 					}
 
@@ -189,21 +219,15 @@ module.exports = class GameController {
 
 		ws.on('close', function() {
 			// Delete this user's connection
-			delete gameConnections[gameId][player - 1];
+			if (gameConnections[gameId])
+				delete gameConnections[gameId][player - 1];
 
-			if (!gameConnections[gameId][0] && !gameConnections[gameId][1]) {
+			if (gameConnections[gameId] && !gameConnections[gameId][0] && !gameConnections[gameId][1]) {
 				// If neither of the users are connected, delete this game entirely
 				delete gameConnections[gameId];
 				delete activeGames[gameId];
 			} else if (game.turn !== null) { // If game is not finished, finish it
-				var stillConnected = player === 1 ? gameConnections[gameId][1] : gameConnections[gameId][0];
-				game.finishGame();
-
-				if (ws.readyState == WebSocket.OPEN)
-					stillConnected.send(JSON.stringify({gameOver: true, player1: game.playerBlack, player2: game.playerWhite}));
-
-				// TODO: Proper finish game, if there were others in lobby, reconnect the winners, persist player scores to db, etc.
-				stillConnected.close(undefined, 'Game Over');
+				endGame();
 			}
 		});
 	}
@@ -222,10 +246,10 @@ module.exports = class GameController {
 		var player2 = new Player('Player 2', 2);
 
 		// Set up the game
-		var game = new Game(player1, player2, size);
+		var id = this.generateId();
+		var game = new Game(id, player1, player2, size);
 
 		// Add the game to the array
-		var id = this.generateId();
 		activeGames[id] = game;
 
 		// Store the game in the user's session so that we know which one they are playing when the websocket connects
@@ -239,7 +263,6 @@ module.exports = class GameController {
 	static hotseatWsAction(ws, request) {
 		var gameId = request.params.id;
 		var game = activeGames[gameId];
-		var passes = 0;
 
 		if (!game) {
 			ws.close(undefined, 'The requested game doesn\'t exist.');
@@ -271,7 +294,7 @@ module.exports = class GameController {
 						ws.send(JSON.stringify({error: result}));
 					} else {
 						// If a move is made, we can reset passes to 0
-						passes = 0;
+						game.passes = 0;
 
 						// And send the new board and change the turn
 						ws.send(JSON.stringify({board: game.board, nextTurn: game.turn.color}));
@@ -285,9 +308,9 @@ module.exports = class GameController {
 				color = message.color;
 
 				if (game.turn.color === color) {
-					passes++;
+					game.passes++;
 
-					if (passes > 1) {
+					if (game.passes > 1) {
 						game.finishGame();
 						ws.send(JSON.stringify({gameOver: true, player1: game.playerBlack, player2: game.playerWhite}));
 						ws.close(undefined, 'Game Over');

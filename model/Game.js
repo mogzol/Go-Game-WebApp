@@ -4,18 +4,22 @@ var Player = require('./Player.js');
 
 module.exports= class Game{
 
-	constructor(playerOne, playerTwo, size)
+	constructor(id, playerOne, playerTwo, size, lobby)
 	{
-		var load = !playerOne instanceof Player; // If playerOne is not a Player, then we are loading from an object
+		var load = typeof id === 'object';
 
-		this._playerBlack = load ? new Player(playerOne._playerBlack) : playerOne;
-		this._playerWhite = load ? new Player(playerOne._playerWhite) : playerTwo;
-		this._turn = load ? playerOne._turn : null;
-		this._board = load ? playerOne._board : this.createBoard(size);
-		this._boardSize = load ? playerOne._boardSize : size*size;
-		this._size = load ? playerOne._size : size;
-		this._boardHistory = load ? playerOne._boardHistory : [];
-		this._Graph = load ? playerOne._Graph : this.createGraph();
+		this._id = load ? id._id : id;
+		this._playerBlack = load ? new Player(id._playerBlack) : playerOne;
+		this._playerWhite = load ? new Player(id._playerWhite) : playerTwo;
+		this._turn = load ? id._turn : null;
+		this._board = load ? id._board : this.createBoard(size);
+		this._boardSize = load ? id._boardSize : size*size;
+		this._size = load ? id._size : size;
+		this._boardHistory = load ? id._boardHistory : [];
+		this._Graph = load ? id._Graph : this.createGraph();
+		this._lobby = load ? id._lobby : lobby;
+		this._passes = load ? id._passes : 0;
+		this._lobby = lobby;
 	}
 
 	/**
@@ -372,6 +376,11 @@ module.exports= class Game{
 		}
 	}
 
+	get id()
+	{
+		return this._id;
+	}
+
 	get turn()
 	{
 		return this._turn;
@@ -427,6 +436,19 @@ module.exports= class Game{
 		return this._playerWhite;
 	}
 
+	get passes()
+	{
+		return this._passes;
+	}
+
+	set passes(passes)
+	{
+		this._passes = passes;
+	}
+
+	get lobby() {
+		return this._lobby;
+	}
 
 	/**
 	 * Prints out the games graph

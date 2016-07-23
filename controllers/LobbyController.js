@@ -10,6 +10,11 @@ var lobbyConnections = {};
 
 module.exports = class LobbyController {
 
+	static generateUniqueLobbyId(name) {
+		var nanotime = process.hrtime();
+		return String(nanotime[0]) + nanotime[1] + '-' + name;
+	}
+
 	static indexAction(request, response) {
 		var openLobbies = [];
 
@@ -40,20 +45,22 @@ module.exports = class LobbyController {
 			return;
 		}
 
-		if (lobbies[name]) {
+		// We don't want duplicate public lobbies with same name, so we only generate unique on private lobbies
+		var id = visibility === 'private' ? this.generateUniqueLobbyId(name) : name;
+
+		if (lobbies[id]) {
 			request.flash('danger', 'A lobby with that name already exists, please try a different one.');
 			response.redirect(routes.lobbies);
 			return;
 		}
 
-		var lobby = new Lobby(name, visibility);
-		lobbies[name] = lobby;
-		response.redirect(routes.joinLobby.replace(':lobby', encodeURIComponent(lobby.name)));
+		lobbies[id] = new Lobby(name, visibility);
+		response.redirect(routes.joinLobby.replace(':lobby', encodeURIComponent(id)));
 	}
 
 	static joinAction(request, response) {
-		var name = request.params.lobby;
-		var lobby = lobbies[name];
+		var id = request.params.lobby;
+		var lobby = lobbies[id];
 
 		if (!lobby) {
 			request.flash('danger', 'The requested lobby doesn\'t exist.');
@@ -62,13 +69,16 @@ module.exports = class LobbyController {
 		}
 
 		response.render('views/lobby.html.njk', {
-			lobby: lobby,
+			name: lobby.name,
+			id: id,
 		});
 	}
 
 	static wsAction(ws, request) {
-		var name = request.params.lobby;
-		var lobby = lobbies[name];
+		var id = request.params.lobby;
+		var lobby = lobbies[id];
+		var closing = false;
+
 		if (!lobby) {
 			ws.close(undefined, 'The requested lobby doesn\'t exist.');
 			return;
@@ -89,18 +99,18 @@ module.exports = class LobbyController {
 		}
 
 		// If that worked then we'll save the socket connection
-		if (!lobbyConnections[name])
-			lobbyConnections[name] = {};
-		lobbyConnections[name][user] = ws;
+		if (!lobbyConnections[id])
+			lobbyConnections[id] = {};
+		lobbyConnections[id][user] = ws;
 
 		// Updates the lobby and sends it to all of the lobbies users
 		function pushUpdate() {
 			// For each user in this lobby, send them the updated lobby
-			for (var user in lobbyConnections[name]) {
-				if (!lobbyConnections[name].hasOwnProperty(user))
+			for (var user in lobbyConnections[id]) {
+				if (!lobbyConnections[id].hasOwnProperty(user))
 					continue; // skip loop if the property is from prototype
 
-				ws = lobbyConnections[name][user];
+				ws = lobbyConnections[id][user];
 				if (ws && ws.readyState == WebSocket.OPEN)
 					ws.send(JSON.stringify({lobby: lobby}));
 			}
@@ -128,13 +138,13 @@ module.exports = class LobbyController {
 				var ban = Boolean(message.ban);
 				var action = ban ? 'been banned from' : 'been kicked from';
 				lobby.removeUser(remove, ban, action);
-				if (lobbyConnections[name]) {
-					var ws = lobbyConnections[name][remove];
+				if (lobbyConnections[id]) {
+					var ws = lobbyConnections[id][remove];
 					if (ws) {
 						ws.close(undefined, 'You have ' + action + ' the lobby');
 					}
 
-					delete lobbyConnections[name][remove];
+					delete lobbyConnections[id][remove];
 				}
 
 				pushUpdate();
@@ -168,21 +178,50 @@ module.exports = class LobbyController {
 				// Push a last minute update before everyone disconnects
 				pushUpdate();
 
+				// Lock the lobby so it doesn't get deleted.
+				lobby.locked = true;
+
+				// If this lobby isn't already private, convert it.
+				if (lobby.visibility !== 'private') {
+					lobby.visibility = 'private';
+					var newId = LobbyController.generateUniqueLobbyId(lobby.name);
+					lobbies[newId] = lobbies[id];
+					lobbyConnections[newId] = lobbyConnections[id];
+					delete lobbies[id];
+					delete lobbyConnections[id];
+					id = newId;
+				}
+
 				for (var group of groups) {
-					var id = GameController.generateLobbyGame(group[0], group[1], size);
+					var game = GameController.generateLobbyGame(group[0], group[1], size, id);
 
 					// If ID is false, then the size or AI is invalid
-					if (id === false) {
+					if (game === false) {
 						lobby.addMessage(null, 'ERROR: Game parameters are invalid. Please try again with valid selections.');
+
+						// Delete the games we've already made
+						for (let game of lobby.games) {
+							GameController.deleteGame(game.id);
+						}
+						lobby.games = [];
+
 						pushUpdate();
 						return;
 					}
 
-					// Tell group members to join the game
-					for (var username of group) {
-						if (lobbyConnections[name] && lobbyConnections[name][username]) {
-							lobbyConnections[name][username].close(4000, id);
-						}
+					lobby.addGame(game);
+				}
+
+				// Tell game members to join the games
+				closing = true;
+				if (lobbyConnections[id]) {
+					for (let game of lobby.games) {
+						[game.playerBlack.player, game.playerWhite.player].forEach(function(username) {
+							var ws = lobbyConnections[id][username];
+							if (ws) {
+								ws.close(4000, game.id);
+							}
+						});
 					}
 				}
 			}
@@ -191,8 +230,8 @@ module.exports = class LobbyController {
 		// When this websocket is closed, remove the user from the lobby
 		ws.on('close', function() {
 			// Remove user from lobby connections
-			if (lobbyConnections[name])
-				delete lobbyConnections[name][user];
+			if (lobbyConnections[id])
+				delete lobbyConnections[id][user];
 
 			// Remove the user from the lobby
 			lobby.removeUser(user);
@@ -200,19 +239,23 @@ module.exports = class LobbyController {
 			// If there are no more users in this lobby, delete it
 			if (lobby.users.length < 1) {
 				// Close any open connections (there shouldn't be any though)
-				for (var username in lobbyConnections[name]) {
-					if (!lobbyConnections[name].hasOwnProperty(username))
+				for (var username in lobbyConnections[id]) {
+					if (!lobbyConnections[id].hasOwnProperty(username))
 						continue; // skip loop if the property is from prototype
 
-					ws = lobbyConnections[name][username];
+					ws = lobbyConnections[id][username];
 					if (ws)
 						ws.close(undefined, 'Lobby closed');
 				}
 
-				// Delete this lobby from the connection list and from the lobby list
-				delete lobbyConnections[name];
-				delete lobbies[name];
-			} else {
+				// If the lobby is not locked, delete this lobby from the connection list and from the lobby list
+				if (!lobby.locked) {
+					delete lobbyConnections[id];
+					delete lobbies[id];
+				}
+
+				closing = false;
+			} else if (!closing) { // If we aren't closing all connections, push the update
 				pushUpdate(lobby);
 			}
 		});

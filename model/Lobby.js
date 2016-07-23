@@ -26,6 +26,11 @@ module.exports = class Lobby{
 		return this._visibility;
 	}
 
+	set visibility(visibility)
+	{
+		this._visibility = visibility;
+	}
+
 	get locked()
 	{
 		return this._locked;
@@ -98,6 +103,11 @@ module.exports = class Lobby{
     get games()
     {
         return this._games;
+    }
+
+    addGame(game)
+    {
+    	this._games.push(game);
     }
 
     get messages()

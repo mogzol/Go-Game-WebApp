@@ -16,10 +16,9 @@ module.exports= class Player{
         this._isAI = load ? name._isAI : isAI || false;     //Is the Player an AI
         this._score = load ? name._score : 0;                //Player Score
         this._captured = load ? name._captured : 0;             //Amount of armies captured
-        this._pass = load ? name._pass : false;             //Does player pass turn
         this._gameResult = load ? name._gameResult : -1;          //Win or Loss
         this._playerHistory = load ? name._playerHistory : [];       //Player's moves
-        this._gameSkillLevel = load ? name._gameSkillLevel : -1;      //Player's Skill level
+        this._gameSkillLevel = load ? name._gameSkillLevel : 9999;      //Player's Skill level
     }
     /**
      * setPlayerTme()
@@ -78,12 +77,6 @@ module.exports= class Player{
     get startDate()
     {
         return this._startDate;
-    }
-    set pass( flag ) {
-        this._pass = flag;
-    }
-    get pass() {
-        return this._pass;
     }
     set playerHistory(move) {
         this._playerHistory.push(move);
