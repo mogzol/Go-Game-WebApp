@@ -2,6 +2,7 @@
 
 var routes = require('../routes.js');
 var Account = require('../model/Account');
+var bcrypt = require('bcryptjs');
 
 var userDB = "user";
 
@@ -32,6 +33,7 @@ module.exports = class AccountController
 				var type = "Administrator";
 
 			response.render('views/account.html.njk', {
+				csrfToken: request.csrfToken(),
 				userName: account.username,
 				userEmail: account.email,
 				userType: type,
@@ -45,4 +47,39 @@ module.exports = class AccountController
 			})
 		});
 	}
-}
+
+	static updateAction(request, response, db)
+	{
+		var email = request.body.email;
+		var password = request.body.password;
+
+		var update = {$set: {}};
+		if (email) {
+			update.$set._email = email;
+		}
+
+		if (password) {
+			password = bcrypt.hashSync(password, 10);
+			update.$set._password = password;
+		}
+
+		var users = db.collection(userDB);
+
+		if (update.$set._email || update.$set._password) {
+			users.update({_username: request.session.username}, update, function(err) {
+				if (err) {
+					console.log(err);
+					request.flash('danger', 'An error occurred, please try again.');
+					response.redirect(routes.account);
+					return;
+				}
+
+				request.flash('success', 'Account updated successfully');
+				response.redirect(routes.account);
+			});
+		} else {
+			request.flash('success', 'Account updated successfully');
+			response.redirect(routes.account);
+		}
+	}
+};

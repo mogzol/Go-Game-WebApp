@@ -7,6 +7,7 @@ module.exports = {
 	logout: '/logout',
 	createAccount: '/createAccount',
 	account: '/account',
+	updateAccount: '/account/update',
 
 	quickGame: '/quick',
 

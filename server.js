@@ -184,8 +184,13 @@ app.post(routes.createAccount, parseForm, csrfProtection, function(request, resp
 });
 
 // Account page
-app.get(routes.account, function(request,response){
+app.get(routes.account, csrfProtection, function(request,response){
 	controllers.AccountController.indexAction(request, response, db);
+});
+
+// Update account details
+app.post(routes.updateAccount, parseForm, csrfProtection, function(request, response) {
+	controllers.AccountController.updateAction(request, response, db);
 });
 
 

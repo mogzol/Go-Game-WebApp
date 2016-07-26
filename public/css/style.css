@@ -126,7 +126,7 @@ td:hover span.ban {
 	border-right: 1px solid #eee;
 }
 
-.not-turn:not('.in-modal') {
+.not-turn:not(.in-modal) {
 	opacity: 0.5;
 }
 

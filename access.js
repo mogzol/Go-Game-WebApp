@@ -9,6 +9,7 @@ module.exports = {
 		/^\/lobbies$/,
 		/^\/lobbies\/.*/,
 		/^\/account$/,
+		/^\/account\/.*/,
 		/^\/game\/(?!hotseat|ai).*/
 	],
 

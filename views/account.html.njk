@@ -1,41 +1,103 @@
 {% extends "views/base.html.njk" %}
 
-{% block title %} Account {% endblock %}
+{% block title %}Account{% endblock %}
 
 {%  block content %}
+	<div class="page-header">
+		<h1>Account Details</h1>
+		<p class="lead">
+			Here you can view details about your account and game stats.
+		</p>
+	</div>
+
 	<div class="row">
 
-		<div class="col-md-6">
+		<div class="col-sm-6">
 			<div class="panel panel-primary">
 				<div class="panel-heading">
 					Account Information
 				</div>
-				<div class="panel-body" id="accountInfo" >
-					<p> Name: {{ userName }} </p>
-					<p> Email: {{ userEmail }} </p>
-					<p> Account Type: {{ userType }} </p>
+				<div class="panel-body">
+					<p><strong>Name:</strong> {{ userName }}</p>
+					<p><strong>Account Type:</strong> {{ userType }}</p>
+					<p><strong>Email:</strong> {{ userEmail }}</p>
+
+					<form action="{{ routes.updateAccount }}" method="POST" role="form">
+						<input type="hidden" name="_csrf" value="{{csrfToken}}">
+						<div id="edit_form" style="display:none">
+							<hr>
+							<div class="form-group">
+								<label for="email">New Email (optional)</label>
+								<input id="email" name="email" type="text" class="form-control" placeholder="New Email Address">
+							</div>
+							<div class="form-group">
+								<label for="password">New Password (optional)</label>
+								<input id="password" type="password" name="password" class="form-control" placeholder="New Password (optional)">
+							</div>
+							<div class="form-group">
+								<label for="password_conf">Confirm New Password</label>
+								<input id="password_conf" type="password" class="form-control" placeholder="Confirm Password">
+								<p id="no_match" class="help-block" style="display:none">Passwords do not match!</p>
+							</div>
+						</div>
+						<button type="button" id="edit" class="btn btn-primary">Edit Details</button>
+					</form>
 				</div>
 			</div>
 		</div>
 
-		<div class="col-md-6">
-			<div class="panel panel-primary">
+		<div class="col-sm-6">
+			<div class="panel panel-default">
 				<div class="panel-heading">
-					Account Game Stats
+					Game Stats
 				</div>
-				<div class="panel-body" id="accountInfo" >
-					<p> Played Games: {{ playerGames }} </p>
-					<p> Games won: {{ numWin }} </p>
-					<p> Games lost: {{ numLoss }} </p>
-					<p> Overall Ratio: {{ ratio }} </p>
-					<p> Overall Skill: {{ userSkill }} </p>
-					<p> Best Game: {{ userBestGame }}</p>
+				<div class="panel-body">
+					<p><strong>Played Games:</strong> {{ playerGames }}</p>
+					<p><strong>Games won:</strong> {{ numWin }}</p>
+					<p><strong>Games lost:</strong> {{ numLoss }}</p>
+					<p><strong>Overall Ratio:</strong> {{ ratio }}</p>
+					<p><strong>Overall Skill:</strong> {{ userSkill }}</p>
+					<p><strong>Best Game:</strong> {{ userBestGame }}</p>
 				</div>
 			</div>
 		</div>
 
 	</div>
-
 {%  endblock %}
+
+{% block javascript %}
+	<script>
+		$(document).on('ready', function() {
+			var $edit = $('#edit');
+			var $editForm = $('#edit_form');
+			var $email = $('#email');
+			var $password = $('#password');
+			var $passwordConf = $('#password_conf');
+			var $noMatch = $('#no_match');
+
+			var passMatch = false;
+
+			$edit.on('click', function(e) {
+				$editForm.slideDown('fast', function() {
+					$edit.text('Submit').attr('type', 'submit');
+				});
+			});
+
+			$password.add($passwordConf).on('change', function() {
+				if ($passwordConf.val()) {
+					if ($passwordConf.val() !== $password.val()) {
+						$passwordConf.closest('.form-group').addClass('has-error');
+						$noMatch.slideDown('fast');
+						passMatch = false;
+					} else {
+						$passwordConf.closest('.form-group').removeClass('has-error');
+						$noMatch.slideUp('fast');
+						passMatch = true;
+					}
+				}
+			})
+		});
+	</script>
+{% endblock %}
 
 
