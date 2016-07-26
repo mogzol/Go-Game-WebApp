@@ -2,24 +2,40 @@
 
 var Player = require('./Player.js');
 
-module.exports= class Game{
+module.exports = class Game{
 
-	constructor(id, playerOne, playerTwo, size, lobby)
+	/**
+	 * ID is current seconds followed by current nanoseconds followed by a dash and a random number from 0-99999
+	 * Really, the random number is unnecessary since there is no way we will be generating multiple games in the
+	 * same nanosecond, but hey, maybe the computers of tomorrow will be, so why not add the random number just to
+	 * be safe.
+	 *
+	 * @returns {string}
+	 */
+	static generateId()
 	{
-		var load = typeof id === 'object';
+		var nanotime = process.hrtime();
+		return String(nanotime[0]) + nanotime[1] + '-' + Math.floor(Math.random() * 100000);
+	}
 
-		this._id = load ? id._id : id;
-		this._playerBlack = load ? new Player(id._playerBlack) : playerOne;
-		this._playerWhite = load ? new Player(id._playerWhite) : playerTwo;
-		this._turn = load ? id._turn : null;
-		this._board = load ? id._board : this.createBoard(size);
-		this._boardSize = load ? id._boardSize : size*size;
-		this._size = load ? id._size : size;
-		this._boardHistory = load ? id._boardHistory : [];
-		this._Graph = load ? id._Graph : this.createGraph();
-		this._lobby = load ? id._lobby : lobby;
-		this._passes = load ? id._passes : 0;
-		this._lobby = lobby;
+	constructor(playerOne, playerTwo, size, lobby)
+	{
+		var load = playerOne instanceof Player === 'object';
+
+		this._id = load ? playerOne._id : Game.generateId();
+		this._playerBlack = load ? new Player(playerOne._playerBlack) : playerOne;
+		this._playerWhite = load ? new Player(playerOne._playerWhite) : playerTwo;
+		this._turn = load ? playerOne._turn : null;
+		this._board = load ? playerOne._board : this.createBoard(size);
+		this._boardSize = load ? playerOne._boardSize : size*size;
+		this._size = load ? playerOne._size : size;
+		this._boardHistory = load ? playerOne._boardHistory : [];
+		this._Graph = load ? playerOne._Graph : this.createGraph();
+		this._lobby = load ? playerOne._lobby : lobby;
+		this._passes = load ? playerOne._passes : 0;
+		this._startTime = load ? playerOne._startTime : Date.now();
+		this._winner =  load ? playerOne._winner : null;
+		this._endTime = load ? playerOne._endTime : null;
 	}
 
 	/**
@@ -347,10 +363,20 @@ module.exports= class Game{
 	 * Calculates final Score
 	 * Assigns skill level to each player
 	 * Skill ratio = (score + captured) * (player time / total time)
+	 *
+	 * @param {string} [winner] (optional) Either 'white' or 'black'. If provided, this will force the winner to be the
+	 *                          given colour, giving the other colour a score of 0.
 	 */
-	finishGame()
+	finishGame(winner)
 	{
 		this.calScore();
+		this._endTime = Date.now();
+
+		if (winner === 'black')
+			this._playerWhite.score = 0;
+		else if (winner === 'white')
+			this._playerBlack.score = 0;
+
 		var totalGameTime = this._playerWhite.playTime + this._playerBlack.playTime;
 		this._turn = null;
 
@@ -358,6 +384,11 @@ module.exports= class Game{
 			this._playerBlack.skill = (this._playerBlack.score + this._playerBlack.captured) + (this._playerBlack.playTime / totalGameTime);
 		if(!this._playerWhite.isAI)
 			this._playerWhite.skill = (this._playerWhite.score + this._playerWhite.captured) + (this._playerWhite.playTime / totalGameTime);
+
+		if (this._playerBlack.score > this._playerWhite.score)
+			this._winner = this._playerBlack;
+		else
+			this._winner = this._playerWhite;
 	}
 
 	/**
@@ -398,7 +429,7 @@ module.exports= class Game{
 
 	get lastMove()
 	{
-		return this._boardHistory.pop();
+		return this._boardHistory[this._boardHistory.length - 1];
 	}
 
 	get whiteTaken()
@@ -448,6 +479,14 @@ module.exports= class Game{
 
 	get lobby() {
 		return this._lobby;
+	}
+
+	get winner() {
+		return this._winner;
+	}
+
+	get endTime() {
+		return this._endTime;
 	}
 
 	/**

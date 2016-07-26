@@ -120,6 +120,15 @@ function hasParams(req, res, next) {
 	next();
 }
 
+/*
+ * -------- SET UP TASKS THAT RUN PERIODICALLY
+ */
+
+// Cleanup lobbies & games every 60 seconds
+setInterval(function () {
+	controllers.LobbyController.cleanupLobbies();
+}, 60000);
+
 
 /*
  * -------- SET UP ROUTES
@@ -183,41 +192,53 @@ app.get(routes.account, function(request,response){
 
 // Lobbies
 app.get(routes.lobbies, csrfProtection, function(request, response) {
-	controllers.LobbyController.indexAction(request, response, db);
+	controllers.LobbyController.indexAction(request, response);
 });
 
 // Create lobby
 app.post(routes.createLobby, parseForm, csrfProtection, function(request, response) {
-	controllers.LobbyController.addAction(request, response, db);
+	controllers.LobbyController.addAction(request, response);
 });
 
 // Join lobby
 app.get(routes.joinLobby, hasParams, csrfProtection, function(request, response) {
-	controllers.LobbyController.joinAction(request, response, db);
+	controllers.LobbyController.joinAction(request, response);
 });
 
 // Lobby websocket request
 app.ws(routes.joinLobby, hasParams, function(ws, request) {
-	controllers.LobbyController.wsAction(ws, request, db);
+	controllers.LobbyController.wsAction(ws, request);
 });
 
 
 
 // Quick Game
-app.get(routes.quickGame, function(request, response) {
+app.get(routes.quickGame, csrfProtection, function(request, response) {
 	controllers.QuickGameController.indexAction(request, response);
 });
 
 
 
 // Hotseat game start
-app.get(routes.hotseatGame, function(request, response) {
-	controllers.GameController.hotseatAction(request, response);
+app.post(routes.hotseatGame, parseForm, csrfProtection, function(request, response) {
+	controllers.GameController.hotseatGameAction(request, response);
 });
 
 // Hotseat game websocket request
 app.ws(routes.joinHotseatGame, hasParams, function(ws, request) {
-	controllers.GameController.hotseatWsAction(ws, request, db);
+	controllers.GameController.hotseatWsAction(ws, request);
+});
+
+
+
+// AI game start
+app.post(routes.aiGame, parseForm, csrfProtection, function(request, response) {
+	controllers.GameController.aiGameAction(request, response);
+});
+
+// AI game websocket request
+app.ws(routes.joinAiGame, hasParams, function(ws, request) {
+	controllers.GameController.wsAction(ws, request);
 });
 
 
@@ -229,7 +250,7 @@ app.get(routes.joinGame, hasParams, function (request, response) {
 
 // Lobby game websocket
 app.ws(routes.joinGame, hasParams, function (ws, request) {
-	controllers.GameController.lobbyWsAction(ws, request);
+	controllers.GameController.wsAction(ws, request);
 });
 
 

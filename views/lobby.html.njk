@@ -223,11 +223,13 @@
 		};
 
 		lobbySocket.onclose = function (event) {
+			window.onbeforeunload = null;
+
 			// If the close event code is 4000, then we are connecting to a game
 			if (event.code === 4000 && event.reason) {
 				window.location.href = '{{ routes.joinGame|replace(':id', '') }}' + encodeURIComponent(event.reason);
+				return;
 			}
-
 
 			$loader.addClass('text-danger');
 
@@ -242,8 +244,6 @@
 			$lobby.fadeOut('fast', function() {
 				$loader.show();
 			});
-
-			window.onbeforeunload = null;
 		};
 
 		// Handle sending messages

@@ -1,17 +1,17 @@
 {% extends "views/base.html.njk" %}
 
-{% block title %}Quick Game{% endblock %}
+{% block title %}{% if hotseat %}Hotseat{% elif ai %}AI{% else %}Lobby{% endif %} Game{% endblock %}
 
 {% block content %}
 	<div class="page-header">
-		<h1>Lobby Game</h1>
+		<h1>{% if hotseat %}Hotseat{% elif ai %}AI{% else %}Lobby{% endif %} Game</h1>
 	</div>
 
 	<div class="row">
 		{# The status column is first even though it is on the right side so that it is on top on small screens #}
 		<div class="col-md-5 col-md-push-7">
 			<div class="panel panel-default">
-				<div class="panel-heading">Lobby Game</div>
+				<div class="panel-heading">{% if hotseat %}Hotseat{% elif ai %}AI{% else %}Lobby{% endif %} Game</div>
 				<div class="panel-body">
 					<div class="row">
 						<div class="player-black col-xs-6 game-left-player">
@@ -81,7 +81,11 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<a href="{{ routes.lobbies }}" id="next" class="btn btn-success">Return to lobby select</a>
+					{% if hotseat or ai %}
+						<a href="{{ routes.quickGame }}" id="next" class="btn btn-success">Return to Quick Game select</a>
+					{% else %}
+						<a href="{{ routes.lobbies }}" id="next" class="btn btn-success">Return to Lobby select</a>
+					{% endif %}
 				</div>
 			</div>
 		</div>
@@ -94,6 +98,7 @@
 		var $board, $messages, $message, $send, $pass, $x, $y, $black, $bUser, $bYou, $bRating, $bPass, $bScore,
 				$white, $wUser, $wYou, $wRating, $wPass, $wScore, $overModal, $overHeader, $next;
 
+		var hotseat = {{ hotseat|default(false) }};
 		var currentTurn = 1;
 		var playingAs = null;
 		var playerBlack = '';
@@ -109,7 +114,9 @@
 			$bUser.text(name);
 			$bRating.text(player._gameSkillLevel);
 
-			if (playingAs === 1) {
+			if (hotseat) {
+				$bPass.css('visibility', 'visible');
+			} else if (playingAs === 1) {
 				$bYou.show();
 				$bPass.css('visibility', 'visible');
 			}
@@ -125,7 +132,9 @@
 			$wUser.text(name);
 			$wRating.text(player._gameSkillLevel);
 
-			if (playingAs === 2) {
+			if (hotseat) {
+				$wPass.css('visibility', 'visible');
+			} else if (playingAs === 2) {
 				$wYou.show();
 				$wPass.css('visibility', 'visible');
 			}
@@ -193,7 +202,15 @@
 			$overHeader = $('#game_over_header');
 			$next = $('#next');
 
-			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinGame|replace(':id', gameId|urlencode) }}');
+			{% if hotseat %}
+				{% set route = routes.joinHotseatGame|replace(':id', gameId|urlencode) %}
+			{% elif ai %}
+				{% set route = routes.joinAiGame|replace(':id', gameId|urlencode) %}
+			{% else %}
+				{% set route = routes.joinGame|replace(':id', gameId|urlencode) %}
+			{% endif %}
+
+			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ route }}');
 
 			gameSocket.onmessage = function (event) {
 				var message = JSON.parse(event.data);
@@ -218,7 +235,7 @@
 					changeTurn(message.nextTurn);
 
 					if (!message.board) // If there is no board sent in this message, then just redraw the board
-						boardDrawer.redraw($board, currentTurn === playingAs ? currentTurn : null);
+						boardDrawer.redraw($board, hotseat || currentTurn === playingAs ? currentTurn : null);
 				}
 
 				if (message.pass) {
@@ -226,7 +243,7 @@
 				}
 
 				if (message.board) {
-					boardDrawer.drawBoard(message.board, $board, currentTurn === playingAs ? currentTurn : null);
+					boardDrawer.drawBoard(message.board, $board, hotseat || currentTurn === playingAs ? currentTurn : null);
 				}
 
 				if (message.lobby) {
@@ -237,8 +254,11 @@
 				if (message.done) {
 					var black = message.done.black;
 					var white = message.done.white;
+					var winner = black._score > white._score ? black : white;
 
-					if ((playingAs === 1 && black._score > white._score) || (playingAs === 2 && white._score >= black._score)) {
+					if (hotseat) {
+						$overHeader.text(winner._player + ' won the game!');
+					} else if ((playingAs === winner._color)) {
 						$overHeader.text('Congratulations, you won!');
 					} else {
 						$overHeader.text('Sorry, you lost. Better luck next time!');

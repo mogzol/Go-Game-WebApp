@@ -2,7 +2,7 @@
 
 module.exports= class Player{
 
-    constructor(name, color, isAI)
+    constructor(name, color, isAI, aiMode)
     {
 	    var load = typeof name === 'object';
 
@@ -14,11 +14,13 @@ module.exports= class Player{
         };
         this._color = load ? name._color : color;            //Player color (1 = Black, 2 = White)
         this._isAI = load ? name._isAI : isAI || false;     //Is the Player an AI
+	    this._aiMode = load ? name._aiMode : aiMode || null; // The AI mode
         this._score = load ? name._score : 0;                //Player Score
         this._captured = load ? name._captured : 0;             //Amount of armies captured
         this._gameResult = load ? name._gameResult : -1;          //Win or Loss
         this._playerHistory = load ? name._playerHistory : [];       //Player's moves
-        this._gameSkillLevel = load ? name._gameSkillLevel : 9999;      //Player's Skill level
+        this._gameSkillLevel = load ? name._gameSkillLevel : 9999;
+	    this._aiMode = aiMode;      //Player's Skill level
     }
     /**
      * setPlayerTme()
@@ -42,7 +44,16 @@ module.exports= class Player{
     {
         return this._isAI;
     }
-    set score( score ) {
+
+	get aiMode() {
+		return this._aiMode;
+	}
+
+	set aiMode(value) {
+		this._aiMode = value;
+	}
+
+	set score( score ) {
         this._score = score;
     }
     get score() {

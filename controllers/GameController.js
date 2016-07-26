@@ -6,27 +6,15 @@ var WebSocket = require('ws');
 var Player = require('../model/Player.js');
 var Game = require('../model/Game.js');
 var LobbyController = require('./LobbyController.js');
+var aiInterface = require('../aiInterface');
 
 var activeGames = {};
 var gameConnections = {};
 var minBoardSize = 3;
 var maxBoardSize = 27;
 
-module.exports = class GameController {
-
-	/**
-	 * ID is current seconds followed by current nanoseconds followed by a dash and a random number from 0-99999
-	 * Really, the random number is unnecessary since there is no way we will be generating multiple games in the
-	 * same nanosecond, but hey, maybe the computers of tomorrow will be, so why not add the random number just to
-	 * be safe.
-	 *
-	 * @returns {string}
-	 */
-	static generateId() {
-		var nanotime = process.hrtime();
-		return String(nanotime[0]) + nanotime[1] + '-' + Math.floor(Math.random() * 100000);
-	}
-
+module.exports = class GameController
+{
 	/**
 	 * Sets up a game and returns the game ID
 	 *
@@ -51,17 +39,16 @@ module.exports = class GameController {
 			if (!['random', 'maxLibs', 'offensive', 'defensive'].includes(user2.mode))
 				return false;
 
-			player2 = new Player('AI (' + user2.mode + ')', 2, true);
+			player2 = new Player('AI (' + user2.mode + ')', 2, true, user2.mode);
 		} else {
 			player2 = new Player(user2, 2);
 		}
 
 		// Set up the game
-		var id = this.generateId();
-		var game = new Game(id, player1, player2, size, lobbyId);
+		var game = new Game(player1, player2, size, lobbyId);
 
 		// Add the game to the array
-		activeGames[id] = game;
+		activeGames[game.id] = game;
 
 		return game;
 	}
@@ -73,6 +60,40 @@ module.exports = class GameController {
 	 */
 	static deleteGame(id) {
 		delete activeGames[id];
+	}
+
+	static aiGameAction(request, response) {
+		var size = parseInt(request.body.size);
+		var ai = request.body.ai;
+		var username = request.session.username || 'Player';
+
+		if (isNaN(size) || size % 2 !== 1 || size < minBoardSize || size > maxBoardSize) {
+			request.flash('danger', 'Board size must be an odd integer between ' + minBoardSize + ' and ' + maxBoardSize);
+			response.redirect(routes.quickGame);
+			return;
+		}
+
+		if (!['random', 'maxLibs', 'offensive', 'defensive'].includes(ai)) {
+			request.flash('danger', 'Selected AI mode is invalid');
+			response.redirect(routes.quickGame);
+			return;
+		}
+
+		// Set up the players
+		var player1 = new Player(username, 1);
+		var player2 = new Player('AI (' + ai + ')', 2, true, ai);
+
+		// Set up the game
+		var game = new Game(player1, player2, size);
+
+		// Add the game to the array
+		activeGames[game.id] = game;
+
+		response.render('views/game.html.njk', {
+			gameId: game.id,
+			username: username,
+			ai: true
+		});
 	}
 
 	static lobbyGameAction(request, response) {
@@ -90,10 +111,10 @@ module.exports = class GameController {
 		})
 	}
 
-	static lobbyWsAction(ws, request) {
+	static wsAction(ws, request) {
 		var gameId = request.params.id;
 		var game = activeGames[gameId];
-		var user = request.session.username;
+		var user = request.session.username || 'Player'; // We fall back to Player to allow for AI play without signing in
 
 		if (!game) {
 			ws.close(undefined, 'The requested game doesn\'t exist.');
@@ -147,22 +168,81 @@ module.exports = class GameController {
 		function pushUpdate(data) {
 			if (gameConnections[gameId]) {
 				for (var ws of gameConnections[gameId]) {
-					if (ws)
+					if (ws && ws.readyState === WebSocket.OPEN)
 						ws.send(JSON.stringify(data));
 				}
 			}
 		}
 
-		function endGame() {
-			game.finishGame();
+		function doAiMove(pass) {
+			if (game.turn.isAI) {
+				var aiFunc = null;
+				switch (game.turn.aiMode) {
+					case 'maxLibs':
+						aiFunc = aiInterface.findMaxLibs;
+						break;
+					case 'offensive':
+						aiFunc = aiInterface.attackEnemy;
+						break;
+					case 'defensive':
+						aiFunc = aiInterface.formEyes;
+						break;
+					default:
+						aiFunc = aiInterface.getRandomMove;
+						break;
+				}
+
+				// Simon's interpretation of x and y is backwards from us
+				var lastMove = {
+					x: game.lastMove ? game.lastMove.next.row : undefined,
+					y: game.lastMove ? game.lastMove.next.col : undefined,
+					c: 1,
+					pass: pass
+				};
+
+				aiFunc(game.size, game.board, lastMove, function(data) {
+					if (!data.pass) {
+						game.passes = 0;
+						var result = game.makeMove(data.y, data.x, game.turn); // Simon's interpretation of x and y is backwards from us
+						if (result !== true) {
+							console.log('Ai made invalid move: ' + JSON.stringify(data));
+							endGame('black');
+							return;
+						}
+
+						pushUpdate({board: game.board, nextTurn: game.turn.color});
+					} else {
+						game.passes++;
+						if (game.passes > 1) {
+							endGame();
+							return;
+						}
+
+						game.switchTurn();
+						pushUpdate({pass: game.playerWhite.player, nextTurn: game.turn.color});
+					}
+				}, function(err) {
+					// On AI error we will give the win to the player
+					endGame('black');
+				});
+			}
+		}
+
+		// Ends the game, optionally forcing a winner
+		function endGame(winner) {
+			game.finishGame(winner);
 			var black = game.playerBlack;
 			var white = game.playerWhite;
 
 			// If the game has a lobby, tell the winner to re-connect
-			if (black.score > white.score && gameConnections[gameId] && gameConnections[gameId][0]) {
-				gameConnections[gameId][0].send(JSON.stringify({lobby: game.lobby}));
-			} else if (gameConnections[gameId] && gameConnections[gameId][1]) {
-				gameConnections[gameId][1].send(JSON.stringify({lobby: game.lobby}));
+			if (black.score > white.score && gameConnections[gameId]) {
+				let ws = gameConnections[gameId][0];
+				if (ws && ws.readyState === WebSocket.OPEN)
+					ws.send(JSON.stringify({lobby: game.lobby}));
+			} else if (gameConnections[gameId]) {
+				let ws = gameConnections[gameId][1];
+				if (ws && ws.readyState === WebSocket.OPEN)
+					gameConnections[gameId][1].send(JSON.stringify({lobby: game.lobby}));
 			}
 
 			// Send the game over message
@@ -191,6 +271,9 @@ module.exports = class GameController {
 						// And send the new board and change the turn
 						pushUpdate({board: game.board, nextTurn: game.turn.color});
 					}
+
+					if (game.turn.isAI)
+						doAiMove(false);
 				} else {
 					ws.send(JSON.stringify({error: 'It is not your turn', nextTurn: game.turn.color}));
 				}
@@ -207,6 +290,9 @@ module.exports = class GameController {
 
 					game.switchTurn();
 					pushUpdate({pass: user, nextTurn: game.turn.color});
+
+					if (game.turn.isAI)
+						doAiMove(true);
 				} else {
 					ws.send(JSON.stringify({error: 'It is not your turn', nextTurn: game.turn.color}));
 				}
@@ -226,17 +312,20 @@ module.exports = class GameController {
 				// If neither of the users are connected, delete this game entirely
 				delete gameConnections[gameId];
 				delete activeGames[gameId];
-			} else if (game.turn !== null) { // If game is not finished, finish it
-				endGame();
+			} else if (game.turn !== null) { // If game is not finished, finish it, giving the win to the user that is still connected
+				if (gameConnections[gameId][0])
+					endGame('black');
+				else
+					endGame('white');
 			}
 		});
 	}
 
-	static hotseatAction(request, response) {
-		var size = 9;//parseInt(request.body.size);
+	static hotseatGameAction(request, response) {
+		var size = parseInt(request.body.size);
 
 		if (isNaN(size) || size % 2 !== 1 || size < minBoardSize || size > maxBoardSize) {
-			request.flash('danger', 'Board size must be an odd integer between 3 and 27');
+			request.flash('danger', 'Board size must be an odd integer between ' + minBoardSize + ' and ' + maxBoardSize);
 			response.redirect(routes.quickGame);
 			return;
 		}
@@ -246,17 +335,14 @@ module.exports = class GameController {
 		var player2 = new Player('Player 2', 2);
 
 		// Set up the game
-		var id = this.generateId();
-		var game = new Game(id, player1, player2, size);
+		var game = new Game(player1, player2, size);
 
 		// Add the game to the array
-		activeGames[id] = game;
+		activeGames[game.id] = game;
 
-		// Store the game in the user's session so that we know which one they are playing when the websocket connects
-		request.session.hotseatGame = id;
-
-		response.render('views/hotseat-game.html.njk', {
-			gameId: id,
+		response.render('views/game.html.njk', {
+			gameId: game.id,
+			hotseat: true,
 		});
 	}
 
@@ -278,49 +364,43 @@ module.exports = class GameController {
 		game.start();
 
 		// Send the initial board
-		ws.send(JSON.stringify({board: game.board, nextTurn: game.turn.color}));
+		ws.send(JSON.stringify({
+			message: {by: null, msg: 'The game has started!'},
+			board: game.board,
+			black: game.playerBlack,
+			white: game.playerWhite,
+			nextTurn: game.turn.color
+		}));
 
 		ws.on('message', function(message) {
 			message = JSON.parse(message);
-			var color;
 
 			if (message.move) {
-				color = message.color;
+				var result = game.makeMove(message.move.x, message.move.y, game.turn);
 
-				if (game.turn.color === color) {
-					var result = game.makeMove(message.move.x, message.move.y, game.turn);
-
-					if (result !== true) {
-						ws.send(JSON.stringify({error: result}));
-					} else {
-						// If a move is made, we can reset passes to 0
-						game.passes = 0;
-
-						// And send the new board and change the turn
-						ws.send(JSON.stringify({board: game.board, nextTurn: game.turn.color}));
-					}
+				if (result !== true) {
+					ws.send(JSON.stringify({error: result}));
 				} else {
-					ws.send(JSON.stringify({error: 'Wrong color played', nextTurn: game.turn.color}));
+					// If a move is made, we can reset passes to 0
+					game.passes = 0;
+
+					// And send the new board and change the turn
+					ws.send(JSON.stringify({board: game.board, nextTurn: game.turn.color}));
 				}
 			}
 
 			if (message.pass) {
-				color = message.color;
+				game.passes++;
 
-				if (game.turn.color === color) {
-					game.passes++;
-
-					if (game.passes > 1) {
-						game.finishGame();
-						ws.send(JSON.stringify({gameOver: true, player1: game.playerBlack, player2: game.playerWhite}));
-						ws.close(undefined, 'Game Over');
-					}
-
-					game.switchTurn();
-					ws.send(JSON.stringify({nextTurn: game.turn.color}));
-				} else {
-					ws.send(JSON.stringify({nextTurn: game.turn.color})); // Wrong color passed, just tell client to switch to other color
+				if (game.passes > 1) {
+					game.finishGame();
+					ws.send(JSON.stringify({nextTurn: null, done: {black: game.playerBlack, white: game.playerWhite}}));
+					ws.close(undefined, 'Game Over');
+					return;
 				}
+
+				game.switchTurn();
+				ws.send(JSON.stringify({pass: game.turn.player, nextTurn: game.turn.color}));
 			}
 
 			if (message.message) {
@@ -329,7 +409,7 @@ module.exports = class GameController {
 		});
 
 		ws.on('close', function() {
-			// Right now we just delete the game
+			// Since it's a hotseat game we'll just delete the game
 			delete activeGames[gameId];
 		});
 	}

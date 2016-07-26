@@ -18,7 +18,7 @@
 				<h1><span class="glyphicon glyphicon-fire"></span></h1>
 				<p>Want to play against a friend on a single computer? Look no further.</p>
 				<br>
-				<p><a class="btn btn-primary btn-lg" href="{{ routes.hotseatGame }}" role="button">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</a></p>
+				<p><button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#hotseat">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</button></p>
 			</div>
 		</div>
 		<div class="col-lg-6">
@@ -27,7 +27,86 @@
 				<h1><span class="glyphicon glyphicon glyphicon-eye-open"></span></h1>
 				<p>Play against an artificial intelligence smarter than Skynet itself.</p>
 				<br>
-				<p><a class="btn btn-primary btn-lg" href="#" role="button">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</a></p>
+				<p><button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#ai">&nbsp;&nbsp;Play Now&nbsp;&nbsp;</button></p>
+			</div>
+		</div>
+	</div>
+
+	<div id="hotseat" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<form action="{{ routes.hotseatGame }}" method="POST">
+					<input type="hidden" name="_csrf" value="{{csrfToken}}">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Start a hotseat game</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="size">Board Size</label>
+							<select name="size" id="size" class="form-control" required>
+								<option value="9">9x9</option>
+								<option value="11">11x11</option>
+								<option value="13">13x13</option>
+								<option value="15">15x15</option>
+								<option value="17">17x17</option>
+								<option value="19" selected>19x19 (Standard)</option>
+								<option value="21">21x21</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-success">Start Game</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="ai" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form action="{{ routes.aiGame }}" method="POST">
+					<input type="hidden" name="_csrf" value="{{csrfToken}}">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Start a game against an AI</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col col-sm-6">
+								<div class="form-group">
+									<label for="size">Board Size</label>
+									<select name="size" id="size" class="form-control" required>
+										<option value="9">9x9</option>
+										<option value="11">11x11</option>
+										<option value="13">13x13</option>
+										<option value="15">15x15</option>
+										<option value="17">17x17</option>
+										<option value="19" selected>19x19 (Standard)</option>
+										<option value="21">21x21</option>
+									</select>
+								</div>
+							</div>
+							<div class="col col-sm-6">
+								<div class="form-group">
+									<label for="ai">AI Setting</label>
+									<select name="ai" id="ai" class="form-control" required>
+										<option value="random">Random Token Placement</option>
+										<option value="maxLibs">Maximize Liberties</option>
+										<option value="offensive">Offensive</option>
+										<option value="defensive">Defensive</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-success">Start game</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
