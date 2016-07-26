@@ -36,6 +36,7 @@ module.exports = class Game{
 		this._startTime = load ? playerOne._startTime : Date.now();
 		this._winner =  load ? playerOne._winner : null;
 		this._endTime = load ? playerOne._endTime : null;
+		this._que = [];
 	}
 
 	/**
@@ -95,7 +96,7 @@ module.exports = class Game{
 		for(var v = 0; v < this._boardSize; v++)
 		{
 			G[v] = new Array(6);
-			for(var dir = 0; dir < 6; dir++)
+			for(var dir = 0; dir < 7; dir++)
 			{
 				switch(dir){
 					case 0:
@@ -127,6 +128,10 @@ module.exports = class Game{
 						break;
 					case 5:
 						G[v][dir] = -1;                                 //No one controls vertex
+						break;
+					case 6:
+						G[v][dir] = 0;
+						break;
 				}
 			}
 		}
@@ -194,6 +199,7 @@ module.exports = class Game{
 			{
 				this._turn.captured += 1;
 				this._Graph[vertex][4] = 0;
+				//this._Graph[vertex][5] = 0;
 				return true;
 			}
 		}
@@ -218,7 +224,7 @@ module.exports = class Game{
 		var pos = 0;
 		for(var dir = 0; dir < 4; dir++)
 		{
-			//console.log("[isOwner] Checking adjacent nodes of :"+this._Graph[vertex][dir]);
+			console.log("[isOwner] Checking adjacent nodes of :"+this._Graph[vertex][dir]);
 			if(this._Graph[vertex][dir] != -1) {
 				adjacent = this._Graph[vertex][dir];
 				if(this._Graph[adjacent][4] === color)
@@ -227,7 +233,7 @@ module.exports = class Game{
 			else
 				neg +=1;
 		}
-		//console.log("[isOwner] neg and pos are: ["+neg+","+pos+"] and add up to: "+(neg+pos));
+		console.log("[isOwner] neg and pos are: ["+neg+","+pos+"] and add up to: "+(neg+pos));
 		return (neg + pos); //=== 4;
 	}
 	/**
@@ -259,8 +265,22 @@ module.exports = class Game{
 			};
 			this._board[r][c] = color;
 			this._Graph[vertex][4] = color;
-			//console.log("[makeMove] Before updateGraph");
+			console.log("[makeMove] Before updateGraph");
 			this.updateGraph(vertex, color);
+			console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
+			console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
+
+			while(this._que.length > 0)
+			{
+				this._Graph[vertex][6] = 1;
+				var start = this._que.pop();
+				var x = Math.floor(start / this._size);
+				var y = start % this._size;
+				this.territory(start, color, x, y);
+				this._Graph[vertex][6] = 0;
+				console.log("[makeMove] Printing graph_____________________________________: "+'\n'+this.printGraph());
+			}
+
 			this._turn.playerHistory = move;
 			this._boardHistory.push(move);
 			this.switchTurn();
@@ -282,7 +302,11 @@ module.exports = class Game{
 		for (var dir = 0; dir < 4; dir++)
 		{
 			if (this._Graph[vertex][dir] != -1) {
-				///console.log("[updateGraph] pushing adjacent node onto stack: " + this._Graph[vertex][dir]);
+				console.log("[updateGraph] pushing adjacent node onto stack: " + this._Graph[vertex][dir]);             //Use to be 2
+				if(this._Graph[this._Graph[vertex][dir]][4] === (3^color) && this.isOwner(this._Graph[vertex][dir], color) >= 1) {
+					console.log("[updateGraph] pushing :"+this._Graph[vertex][dir]+": onto que");
+					this._que.push(this._Graph[vertex][dir]);
+				}
 				stack.push(this._Graph[vertex][dir]);
 			}
 		}
@@ -291,9 +315,13 @@ module.exports = class Game{
 		{
 			adjacent = stack.pop();
 			var own = this.isOwner(adjacent, color);
-
+			if(this._Graph[adjacent][5] === (3^color))
+			{
+				console.log("[update] Pushing onto que the adjacent node : "+adjacent);
+				this._que.push(adjacent);
+			}
 			if (this._Graph[adjacent][4] != color && own === 4) {
-				//console.log("[updateGraph] fully owned adjacent node off stack is: " + adjacent);
+				console.log("[updateGraph] fully owned adjacent node off stack is: " + adjacent);
 				this._Graph[adjacent][4] = 0;
 				this._Graph[adjacent][5] = color;
 				this._board[Math.floor(adjacent / this._size)][adjacent % this._size] = 0;
@@ -308,24 +336,92 @@ module.exports = class Game{
 	 * @param color
 	 * @returns {boolean} Can keep going, Return false if dead end. (base case)
 	 */
-	territory(v,dir,color)
+	territory(v,color, x, y)
 	{
+		console.log("[territory] vertex is:"+v);
+
+		this._Graph[v][6] = 1;
+		var owns = this.isOwner(v, color);
+
+		console.log("[territory] owns is: "+owns);
+
+
+		this._Graph[v][5] = color;
+		this._Graph[v][4] = color;
+		this._turn.captured += 1;
+
 		//Base case
-		if(this._board[Math.floor(v / this._size)][v % this._size] !== 0 )
-		{
-			return false;
+		if(owns === 4){
+			this._board[x][y] = 0;
+			this._Graph[v][6] = 0;
+			this._Graph[v][5] = color;
+			this._Graph[v][4] = 0;
+			return true;
+		} else if(owns <= 3) {
+
+			if(owns <= 2){
+				var boarder = 0;
+				var enemy = 0;
+				var friendly = 0;
+				for(var dir=0; dir<4; dir++)
+				{
+					if(this._Graph[v][dir] === -1) {
+						boarder += 1;
+					}else if(this._Graph[this._Graph[v][dir]][4] === (3^color) ) {
+						friendly += 1;
+					}else if(this._Graph[this._Graph[v][dir]][4] === color){
+						enemy += 1;
+					}
+				}if((friendly + enemy + boarder) < 4){
+					this._Graph[v][6] = 0;
+					this._Graph[v][5] = 0;
+					this._Graph[v][4] = (3^color);
+					this._turn.captured -= 1;
+					return false;
+				}
+			}
+			//Move left
+			console.log("[territory] moving left, with [x,y-1] : [" + x + "," + (y - 1) + "]  with color of :" + color+" and vertex : "+v);
+			if (((y - 1) >= 0) && (this._Graph[this._Graph[v][0]][6] !== 1) && (this._board[x][y - 1] === (3^color)) && this.territory(this._Graph[v][0], color, x, y - 1)) {
+				this._Graph[v][6] = 0;
+				this._Graph[v][5] = color;
+				this._board[x][y] = 0;
+				this._Graph[v][4] = 0;
+				return true;
+			}
+			//Move right
+			console.log("[territory] moving right, with [x,y+1] : [" + x + "," + (y + 1) + "] with color of :" + color+" and vertex : "+v);
+			if (y + 1 < this._size && this._Graph[this._Graph[v][1]][6] !== 1 && this._board[x][y + 1] === (3^color) && this.territory(this._Graph[v][1], color, x, y + 1)) {
+				this._Graph[v][6] = 0;
+				this._Graph[v][5] = color;
+				this._board[x][y] = 0;
+				this._Graph[v][4] = 0;
+				return true;
+			}
+			//Move Up
+			console.log("[territory] moving up, with [x-1, y] : [" + (x - 1) + "," + y + "]  with color of :" + color+" and vertex : "+v);
+			if (x - 1 >= 0 && this._Graph[this._Graph[v][2]][6] !== 1 && this._board[x - 1][y] === (3^color) && this.territory(this._Graph[v][2], color, x - 1, y)) {
+				this._Graph[v][6] = 0;
+				this._Graph[v][5] = color;
+				this._board[x][y] = 0;
+				this._Graph[v][4] = 0;
+				return true;
+			}
+			//Move Down
+			console.log("[territory] moving down, with [x+1, y] : [" + (x + 1) + "," + y + "]  with color of :" + color+" and vertex : "+v);
+			if (x + 1 < this._size && this._Graph[this._Graph[v][3]][6] !== 1 && this._board[x + 1][y] === (3^color) && this.territory(this._Graph[v][3], color, x + 1, y)) {
+				this._Graph[v][6] = 0;
+				this._Graph[v][5] = color;
+				this._board[x][y] = 0;
+				this._Graph[v][4] = 0;
+				return true;
+			}
 		}
-		if(this._Graph[v][dir] === -1)
-		{
-			dir += 1;
-		}
-		//Move left
-
-		//Move right
-
-		//Move Up
-
-		//Move Down
+		this._Graph[v][6] = 0;
+		this._Graph[v][5] = 0;
+		this._Graph[v][4] = (3^color);
+		this._turn.captured -= 1;
+		return false;
 	}
 	/**
 	 *Calculates the score and assigns them to players
@@ -499,7 +595,7 @@ module.exports = class Game{
 		for(var v = 0; v< this._boardSize; v++)
 		{
 			str+=   v+' ->\t[';
-			for(var u = 0; u < 6; u++)
+			for(var u = 0; u < 7; u++)
 			{
 				if(u == 4) {
 					if(str.length < 15+(v*24))
@@ -509,7 +605,7 @@ module.exports = class Game{
 				}
 				else
 					str += this._Graph[v][u];
-				if(u < 5 && u != 3)
+				if(u < 6 && u != 3)
 					str += ',';
 			}
 			str += ']\n';
