@@ -19,7 +19,7 @@ module.exports= class Player{
         this._captured = load ? name._captured : 0;             //Amount of armies captured
         this._gameResult = load ? name._gameResult : -1;          //Win or Loss
         this._playerHistory = load ? name._playerHistory : [];       //Player's moves
-        this._gameSkillLevel = load ? name._gameSkillLevel : 9999;
+        this._gameSkillLevel = load ? name._gameSkillLevel : 100;
 	    this._aiMode = aiMode;      //Player's Skill level
     }
     /**

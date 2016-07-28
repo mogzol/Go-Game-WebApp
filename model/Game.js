@@ -476,15 +476,51 @@ module.exports = class Game{
 		var totalGameTime = this._playerWhite.playTime + this._playerBlack.playTime;
 		this._turn = null;
 
-		if(!this._playerBlack.isAI)
-			this._playerBlack.skill = (this._playerBlack.score + this._playerBlack.captured) + (this._playerBlack.playTime / totalGameTime);
-		if(!this._playerWhite.isAI)
-			this._playerWhite.skill = (this._playerWhite.score + this._playerWhite.captured) + (this._playerWhite.playTime / totalGameTime);
-
 		if (this._playerBlack.score > this._playerWhite.score)
 			this._winner = this._playerBlack;
 		else
 			this._winner = this._playerWhite;
+
+		if(!this._playerBlack.isAI && !this._playerWhite.isAI) {
+			this.calculateRating();
+		}
+	}
+
+	calculateRating()
+	{
+		var bs = this._playerBlack.skill;
+		var ws = this._playerWhite.skill;
+		var K = 116;
+
+		var Se = 1 / (Math.pow(Math.E, (Math.abs(bs - ws)/(ws ? bs : bs > ws))) + 1);
+		// var Se = 1 / (Math.pow(Math.E, 1));
+		if(bs > this._winner.skill || (ws.skill == bs.skill && this.playerWhite == this._winner)) {
+			this.playerWhite.skill = this.playerWhite.skill + K * (1 - Se);
+			this.playerBlack.skill = this.playerBlack.skill + K * (0 - (1-Se));
+			console.log("playerBlack > playerWhite and white won");
+		}
+		else if(bs < this._winner.skill) {
+			this.playerWhite.skill = this.playerWhite.skill + K * (1 - Se);
+			this.playerBlack.skill = this.playerBlack.skill + K * (0 - (1-Se));
+			console.log("playerBlack < playerWhite and white won");
+		}
+		else if(ws > this._winner.skill || (ws == bs && this.playerBlack == this._winner)) {
+			this.playerBlack.skill = this.playerBlack.skill + K * (1 - Se);
+			this.playerWhite.skill = this.playerWhite.skill + K * (0 - (1-Se));
+			console.log("playerWhite > playerBlack and black won");
+		}
+		else {
+			this.playerBlack.skill = this.playerBlack.skill + K * (1 - Se);
+			this.playerWhite.skill = this.playerWhite.skill + K * (0 - (1-Se));
+			console.log("playerWhite < playerBlack and black won");
+		}
+
+		if(this.playerWhite.skill < 100) {
+			this.playerWhite.skill = 100;
+		}
+		else if(this.playerBlack.skill < 100) {
+			this.playerBlack.skill = 100;
+		}
 	}
 
 	/**
