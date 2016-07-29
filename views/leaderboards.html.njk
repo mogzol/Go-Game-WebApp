@@ -19,6 +19,16 @@
 					<th>Wins</th>
 					<th>Loses</th>
 				</tr>
+
+				{% for account in accounts %}
+				<tr>
+					<th> {{ account._username }} </th>
+					<th> {{ loop.index }} </th>
+					<th> {{ account._userSkillLevel }} </th>
+					<th> {{ account._numWin }} </th>
+					<th> {{ account._numLoss }} </th>
+				</tr>
+				{% endfor %}
 			</thead>
 		</table>
 

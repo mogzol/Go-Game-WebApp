@@ -268,13 +268,8 @@ app.get(routes.rules, function(request, response) {
 
 
 
-// The leaderboards
-app.get(routes.leaderboards, function(request, response) {
-	response.render('views/leaderboards.html.njk');
-});
-
 // The leaderboards controller
-app.get(routes.admin, function(request, response) {
+app.get(routes.leaderboards, function(request, response) {
 	controllers.LeaderboardController.indexAction(request, response, db);
 });
 
