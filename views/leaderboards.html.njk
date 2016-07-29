@@ -1,0 +1,28 @@
+{% extends "views/base.html.njk" %}
+
+{% block title %}Leaderboards{% endblock %}
+
+{% block content %}
+	<div class="page-header">
+		<h1>LeaderBoards</h1>
+		<p class="lead">
+			The leaderboards are based off of the skill calculated at the end of each game using the Elo ranking system.
+		</p>
+	</div>
+	<div class="row">
+		<table class="table table-bordered table-responsive">
+			<thead>
+				<tr>
+					<th>Username</th>
+					<th>Ranking</th>
+					<th>Skill</th>
+					<th>Wins</th>
+					<th>Loses</th>
+				</tr>
+			</thead>
+		</table>
+
+	</div>
+
+
+{% endblock %}

@@ -259,9 +259,19 @@ app.ws(routes.joinGame, hasParams, function (ws, request) {
 });
 
 
-
+// Rules
 app.get(routes.rules, function(request, response) {
 	response.render('views/rules.html.njk');
+});
+
+// The leaderboards
+app.get(routes.leaderboards, function(request, response) {
+	response.render('views/leaderboards.html.njk');
+});
+
+// The leaderboards controller
+app.get(routes.admin, function(request, response) {
+	controllers.LeaderboardController.indexAction(request, response, db);
 });
 
 /*
