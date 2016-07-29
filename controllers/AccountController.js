@@ -37,7 +37,7 @@ module.exports = class AccountController
 				userName: account.username,
 				userEmail: account.email,
 				userType: type,
-				playerGames: account.userGames.length,
+				playerGames: account.userWins + account.userLoss,
 				numWin: account.userWins,
 				numLoss: account.userLoss,
 				ratio:  account.overallRatio,

@@ -69,31 +69,19 @@ module.exports = class Account
 		return this._numLoss;
 	}
 
-    /**
-     * setPlayerStats( player )
-     * updates User account with game stats stored in player
-     * Stores game states in player_Games
-     */
-    set playerStats(player)
-    {
-        var gameStat={
-            gameDate: player.startDate(),
-            gameResult: player.result(),
-            gameTime: player.playTime(),
-            gameScore: player.score(),
-            gameCaptured: player.captured(),
-            gameMoves: player.playerHistory(),
-            gameSkill: player.skill()
-        };
-        if(gameStat.gameResult == 1)
-            this._numWin += 1;
-        else
-            this._numLoss += 1;
+	updateFromPlayer(player)
+	{
+		if (player.result === 1) {
+			this._numWin++;
+		} else {
+			this._numLoss++;
+		}
 
-        this._overallRatio= this._numWin / this._numLoss;
-        this._userGames.push(gameStat);
-        this.calculateBestGame();
-    }
+		this._overallRatio = (this._numWin / this._numLoss).toFixed(2);
+		this._userSkillLevel = player.skill;
+
+		// We would also add the game ID to the games array, but we aren't saving games atm
+	}
 
     get overallRatio()
     {
@@ -103,20 +91,6 @@ module.exports = class Account
     get userSkillLevel()
     {
         return this._userSkillLevel;
-    }
-
-    updateFromPlayer(player)
-    {
-    	if (player.result === 1) {
-    		this._numWin++;
-	    } else {
-	    	this._numLoss++;
-	    }
-
-	    this._overallRatio = this._numWin / this._numLoss;
-	    this._userSkillLevel = player.skill;
-
-	    // We would also add the game ID to the games array, but we aren't saving games atm
     }
 
 	/**
