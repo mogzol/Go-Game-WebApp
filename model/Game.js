@@ -322,7 +322,7 @@ module.exports = class Game{
 					this._turn.captured += 1;
 					this._captured = true;
 				}
-				console.log("[makeMove] Printing graph after territories: "+'\n'+this.printGraph());
+				//console.log("[makeMove] Printing graph after territories: "+'\n'+this.printGraph());
 			}
 			this._turn.playerHistory = move;
 			this._boardHistory.push(move);
