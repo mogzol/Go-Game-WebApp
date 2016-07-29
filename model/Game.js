@@ -463,8 +463,7 @@ module.exports = class Game{
 	 * @param {string} [winner] (optional) Either 'white' or 'black'. If provided, this will force the winner to be the
 	 *                          given colour, giving the other colour a score of 0.
 	 */
-	finishGame(winner)
-	{
+	finishGame(winner) {
 		this.calScore();
 		this._endTime = Date.now();
 
@@ -481,44 +480,61 @@ module.exports = class Game{
 		else
 			this._winner = this._playerWhite;
 
-		if(!this._playerBlack.isAI && !this._playerWhite.isAI) {
+		if (!this._playerBlack.isAI && !this._playerWhite.isAI) {
 			this.calculateRating();
 		}
+		else if (this._playerBlack.isAi) {
+			this._playerWhite.score = this._playerWhite.score;
+		}
+		else {
+			this._playerBlack.score = this._playerBlack.score;
+		}
 	}
-
-	calculateRating()
-	{
+	/**
+	 * Calculates a rating based off an elo scoring system found here:
+	 * https://en.wikipedia.org/wiki/Go_ranks_and_ratings
+	 * Rating can't go below 100
+	 */
+	calculateRating() {
 		var bs = this._playerBlack.skill;
 		var ws = this._playerWhite.skill;
 		var K = 116;
 
-		var Se = 1 / (Math.pow(Math.E, (Math.abs(bs - ws)/(ws ? bs : bs > ws))) + 1);
-		// var Se = 1 / (Math.pow(Math.E, 1));
-		if(bs > this._winner.skill || (ws.skill == bs.skill && this.playerWhite == this._winner)) {
-			this.playerWhite.skill = this.playerWhite.skill + K * (1 - Se);
-			this.playerBlack.skill = this.playerBlack.skill + K * (0 - (1-Se));
+		var Se = 1 / (Math.pow(Math.E, (Math.abs(bs - ws) / (ws ? bs : bs > ws))) + 1);
+		console.log(Se);
+
+		// If black's skill is greater than or equal to white's and white won the game
+		if (bs > this._winner.skill || (ws.skill == bs.skill && this.playerWhite == this._winner)) {
+			this.playerWhite.skill = Math.round(this.playerWhite.skill + K * (1 - Se));
+			this.playerBlack.skill = Math.round(this.playerBlack.skill + K * (0 - (1 - Se)));
 			console.log("playerBlack > playerWhite and white won");
 		}
-		else if(bs < this._winner.skill) {
-			this.playerWhite.skill = this.playerWhite.skill + K * (1 - Se);
-			this.playerBlack.skill = this.playerBlack.skill + K * (0 - (1-Se));
+
+		// If black's skill is less than white's skill but white won the game
+		else if (bs < this._winner.skill) {
+			this.playerWhite.skill = Math.round(this.playerWhite.skill + K * (1 -(1 - Se)));
+			this.playerBlack.skill = Math.round(this.playerBlack.skill + K * (0 - Se));
 			console.log("playerBlack < playerWhite and white won");
 		}
-		else if(ws > this._winner.skill || (ws == bs && this.playerBlack == this._winner)) {
-			this.playerBlack.skill = this.playerBlack.skill + K * (1 - Se);
-			this.playerWhite.skill = this.playerWhite.skill + K * (0 - (1-Se));
-			console.log("playerWhite > playerBlack and black won");
-		}
-		else {
-			this.playerBlack.skill = this.playerBlack.skill + K * (1 - Se);
-			this.playerWhite.skill = this.playerWhite.skill + K * (0 - (1-Se));
-			console.log("playerWhite < playerBlack and black won");
+
+		// If white's skill is greater than or equal to black's skill but black won the game
+		else if (ws > this._winner.skill || (ws == bs && this.playerBlack == this._winner)) {
+			this.playerBlack.skill = Math.round(this.playerBlack.skill + K * (1 - Se));
+			this.playerWhite.skill = Math.round(this.playerWhite.skill + K * (0 - (1 - Se)));
+			console.log("playerBlack < playerWhite and black won");
 		}
 
-		if(this.playerWhite.skill < 100) {
+		// If white's skill is less than black's skill but black won the game
+		else {
+			this.playerBlack.skill = Math.round(this.playerBlack.skill + K * (1 - (1 - Se)));
+			this.playerWhite.skill = Math.round(this.playerWhite.skill + K * (0 - Se));
+			console.log("playerBlack > playerWhite and black won");
+		}
+
+		if (this.playerWhite.skill < 100) {
 			this.playerWhite.skill = 100;
 		}
-		else if(this.playerBlack.skill < 100) {
+		else if (this.playerBlack.skill < 100) {
 			this.playerBlack.skill = 100;
 		}
 	}
