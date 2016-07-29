@@ -36,7 +36,7 @@ var nunjucks = require('nunjucks');
 var env = nunjucks.configure({
 	autoescape: true,
 	express: app,
-	watch: true // Watch templates for changes. Useful for dev, remove for production though
+	//watch: true // Watch templates for changes. Useful for dev, remove for production though
 });
 env.addFilter('empty', function(object) { // Needed a way to check if an object was empty
 	return Object.keys(object).length === 0;
@@ -44,7 +44,7 @@ env.addFilter('empty', function(object) { // Needed a way to check if an object 
 
 // Set up mongojs (like mongodb but cleaner code)
 var mongojs = require('mongojs');
-var db = mongojs('localhost:27017/goApp');
+var db = mongojs('localhost:27017/GoPro');
 
 // Set up body-parser (for form data reading)
 var bodyParser = require('body-parser');
@@ -70,7 +70,7 @@ function requiresAdmin(url) {
 }
 
 // The port we will run on
-var port = 3000;
+var port = 30092;
 
 
 /*
