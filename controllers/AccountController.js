@@ -37,12 +37,11 @@ module.exports = class AccountController
 				userName: account.username,
 				userEmail: account.email,
 				userType: type,
-				playerGames: account.userGames,
+				playerGames: account.userGames.length,
 				numWin: account.userWins,
 				numLoss: account.userLoss,
 				ratio:  account.overallRatio,
 				userSkill:  account.userSkillLevel,
-				UserBestGame: account.userBestGame
 
 			})
 		});
