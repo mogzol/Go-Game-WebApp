@@ -6,6 +6,7 @@ var WebSocket = require('ws');
 var Player = require('../model/Player.js');
 var Game = require('../model/Game.js');
 var LobbyController = require('./LobbyController.js');
+var AccountController = require('./AccountController.js');
 var aiInterface = require('../aiInterface');
 
 var activeGames = {};
@@ -23,10 +24,11 @@ module.exports = class GameController
 	 *                                object should look like: {ai: true, mode: 'MODE'}. Replace MODE with the ai mode.
 	 * @param {int}           size    The board size
 	 * @param {string|null}   lobbyId The id for the lobby to reconnect to, or null to not reconnect.
+	 * @param {object}        db      The MongoJs database object
 	 *
 	 * @returns {string|boolean} The ID of the game, or false if there was an error creating the game
 	 */
-	static generateLobbyGame(user1, user2, size, lobbyId) {
+	static generateLobbyGame(user1, user2, size, lobbyId, db) {
 		// Make sure size is valid
 		if (!Number.isInteger(size) || size % 2 !== 1 || size < minBoardSize || size > maxBoardSize)
 			return false;
@@ -46,6 +48,17 @@ module.exports = class GameController
 
 		// Set up the game
 		var game = new Game(player1, player2, size, lobbyId);
+
+		// We need to get player skill levels from the database and assign them, so lets do that now
+		AccountController.getPlayerSkill(user1, db, function(skill) {
+			game.playerBlack.skill = skill;
+		});
+
+		if (!user2.ai) {
+			AccountController.getPlayerSkill(user2, db, function(skill) {
+				game.playerWhite.skill = skill;
+			});
+		}
 
 		// Add the game to the array
 		activeGames[game.id] = game;
@@ -111,7 +124,7 @@ module.exports = class GameController
 		})
 	}
 
-	static wsAction(ws, request) {
+	static wsAction(ws, request, db) {
 		var gameId = request.params.id;
 		var game = activeGames[gameId];
 		var user = request.session.username || 'Player'; // We fall back to Player to allow for AI play without signing in
@@ -248,10 +261,19 @@ module.exports = class GameController
 			// Send the game over message
 			pushUpdate({nextTurn: null, done: {black: black, white: white}});
 
-			// And close the connections
-			for (var ws of gameConnections[gameId]) {
-				if (ws)
-					ws.close(undefined, 'Game Over');
+			// Wait a second and then close the connections. We were having an issue where sometimes the connection would
+			// be closed before the pushUpdate finished
+			setTimeout(function() {
+				for (var ws of gameConnections[gameId]) {
+					if (ws)
+						ws.close(undefined, 'Game Over');
+				}
+			}, 2000);
+
+			// Update accounts with game results
+			if (!game.playerBlack.isAI && !game.playerWhite.isAI) {
+				AccountController.updateAccountFromPlayer(game.playerBlack, db);
+				AccountController.updateAccountFromPlayer(game.playerWhite, db);
 			}
 		}
 

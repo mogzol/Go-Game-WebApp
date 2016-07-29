@@ -4,6 +4,7 @@ var routes = require('../routes.js');
 
 var userDb = 'user';
 
+// THIS FILE IS DISABLED SINCE IT IS OUTDATED AND WE DIDN'T BOTHER UPDATING IT
 module.exports = class AdminController
 {
 	/**

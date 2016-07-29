@@ -146,20 +146,21 @@ app.get(routes.home, csrfProtection, function(request, response) {
 
 
 
-// Admin page. Right now anyone can access it (bad shit)
-app.get(routes.admin, csrfProtection, function(request, response) {
-	controllers.AdminController.indexAction(request, response, db);
-});
-
-// Admin page. Right now anyone can access it (bad shit)
-app.post(routes.adminCreateAccount, csrfProtection, function(request, response) {
-	controllers.AdminController.createAccountAction(request, response, db);
-});
-
-// Remove all users POST request
-app.post(routes.removeAllAccounts, parseForm, csrfProtection, function(request, response) {
-	controllers.AdminController.removeUsersAction(request, response, db);
-});
+///////////////// Admin pages disabled since they're outdated and we never bothered to update them
+//// Admin page.
+//app.get(routes.admin, csrfProtection, function(request, response) {
+//	controllers.AdminController.indexAction(request, response, db);
+//});
+//
+//// Admin page.
+//app.post(routes.adminCreateAccount, csrfProtection, function(request, response) {
+//	controllers.AdminController.createAccountAction(request, response, db);
+//});
+//
+//// Remove all users POST request
+//app.post(routes.removeAllAccounts, parseForm, csrfProtection, function(request, response) {
+//	controllers.AdminController.removeUsersAction(request, response, db);
+//});
 
 
 
@@ -212,7 +213,7 @@ app.get(routes.joinLobby, hasParams, csrfProtection, function(request, response)
 
 // Lobby websocket request
 app.ws(routes.joinLobby, hasParams, function(ws, request) {
-	controllers.LobbyController.wsAction(ws, request);
+	controllers.LobbyController.wsAction(ws, request, db);
 });
 
 
@@ -255,9 +256,27 @@ app.get(routes.joinGame, hasParams, function (request, response) {
 
 // Lobby game websocket
 app.ws(routes.joinGame, hasParams, function (ws, request) {
-	controllers.GameController.wsAction(ws, request);
+	controllers.GameController.wsAction(ws, request, db);
 });
 
+
+
+// Rules
+app.get(routes.rules, function(request, response) {
+	response.render('views/rules.html.njk');
+});
+
+
+
+// The leaderboards
+app.get(routes.leaderboards, function(request, response) {
+	response.render('views/leaderboards.html.njk');
+});
+
+// The leaderboards controller
+app.get(routes.admin, function(request, response) {
+	controllers.LeaderboardController.indexAction(request, response, db);
+});
 
 /*
  * -------- ERROR HANDLING

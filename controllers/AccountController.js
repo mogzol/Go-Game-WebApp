@@ -82,4 +82,51 @@ module.exports = class AccountController
 			response.redirect(routes.account);
 		}
 	}
+
+	static updateAccountFromPlayer(player, db)
+	{
+		var users = db.collection(userDB);
+
+		users.find({_username: player.player}, function(err, results) {
+			if (err) {
+				console.log(err);
+				return;
+			} else if (results.length < 1) {
+				console.log('Unable to find user ' + player.player + ' in the database, can\'t update details!');
+				return;
+			}
+
+			// Create an account from the first user (there should only be 1 user)
+			var account = new Account(results[0]);
+
+			// Update the account details
+			account.updateFromPlayer(player);
+
+			// And persist it back to the database
+			users.update({_username: account.username}, account, function(err) {
+				if (err) {
+					console.log(err);
+				}
+			});
+		});
+	}
+
+	static getPlayerSkill(username, db, cb)
+	{
+		var users = db.collection(userDB);
+
+		users.find({_username: username}, function(err, results) {
+			if (err) {
+				console.log(err);
+				return;
+			} else if (results.length < 1) {
+				console.log('Unable to find user ' + player.player + ' in the database, can\'t get skill!');
+				return;
+			}
+
+			// Create an account from the first user (there should only be 1 user)
+			var account = new Account(results[0]);
+			cb(account.userSkillLevel);
+		});
+	}
 };

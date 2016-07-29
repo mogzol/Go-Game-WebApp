@@ -14,7 +14,6 @@ module.exports = class Account
         this._numWin = load ? name._numWin : 0;
 	    this._numLoss = load ? name._numLoss : 0;
         this._overallRatio = load ? name._overallRatio : 0;
-        this._userBestGame = load ? name._userBestGame : null;
         this._userSkillLevel = load ? name._userSkillLevel : 0;
     }
 
@@ -106,9 +105,18 @@ module.exports = class Account
         return this._userSkillLevel;
     }
 
-    get userBestGame()
+    updateFromPlayer(player)
     {
-        return this._userBestGame;
+    	if (player.result === 1) {
+    		this._numWin++;
+	    } else {
+	    	this._numLoss++;
+	    }
+
+	    this._overallRatio = this._numWin / this._numLoss;
+	    this._userSkillLevel = player.skill;
+
+	    // We would also add the game ID to the games array, but we aren't saving games atm
     }
 
 	/**
