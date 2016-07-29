@@ -244,7 +244,7 @@ app.post(routes.aiGame, parseForm, csrfProtection, function(request, response) {
 
 // AI game websocket request
 app.ws(routes.joinAiGame, hasParams, function(ws, request) {
-	controllers.GameController.wsAction(ws, request);
+	controllers.GameController.wsAction(ws, request, db);
 });
 
 
