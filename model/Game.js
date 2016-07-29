@@ -170,14 +170,16 @@ module.exports = class Game{
 		}
 		else if(this._Graph[vertex][5] === (3^color))
 		{
-			if(this.canAttack(vertex,color)){
+			if(this.canAttack(vertex,color)) {
 				console.log("[isValid] Attacking controlled liberty");
 				this._captured = true;
 				return true;
-			}else if(this.isEmpty(vertex)){
+			} else if(this.isEmpty(vertex)) {
 				console.log("[isValid] Taunting controlled liberty");
 				return true;
 			}
+
+			return 'Invalid move';
 		}
 		else
 		{
@@ -203,6 +205,7 @@ module.exports = class Game{
 		if(playerMove.next.V === vertex){
 			this._Graph[vertex][4] = 0;
 			console.log('Can not make a same move as last one');
+			moves.push(playerMove);
 			return false;
 		}
 		for(var dir = 0; dir < 4; dir++)
@@ -211,6 +214,7 @@ module.exports = class Game{
 			{
 				this._Graph[vertex][4] = 0;
 				console.log('Can not make a recursive move');
+				moves.push(playerMove);
 				return false;
 			}
 			else if(this._Graph[vertex][dir] != -1 && this.isOwner(this._Graph[vertex][dir],color) === 4 )
@@ -222,6 +226,7 @@ module.exports = class Game{
 			}
 		}
 		this._Graph[vertex][4] = 0;
+		moves.push(playerMove);
 		return false;
 	}
 	/**
@@ -285,8 +290,8 @@ module.exports = class Game{
 			this._Graph[vertex][4] = color;
 			//console.log("[makeMove] Before updateGraph");
 			this.updateGraph(vertex, color);
-			console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
-			console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
+			//console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
+			//console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
 
 			if(this._que.length > 0)
 			{
