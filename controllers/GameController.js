@@ -50,15 +50,10 @@ module.exports = class GameController
 		var game = new Game(player1, player2, size, lobbyId);
 
 		// We need to get player skill levels from the database and assign them, so lets do that now
-		AccountController.getPlayerSkill(user1, db, function(skill) {
-			game.playerBlack.skill = skill;
+		AccountController.getPlayerSkills(user1, user2.ai ? null : user2, db, function(u1skill, u2skill) {
+			game.playerBlack.skill = u1skill || game.playerBlack.skill;
+			game.playerWhite.skill = u2skill || game.playerWhite.skill;
 		});
-
-		if (!user2.ai) {
-			AccountController.getPlayerSkill(user2, db, function(skill) {
-				game.playerWhite.skill = skill;
-			});
-		}
 
 		// Add the game to the array
 		activeGames[game.id] = game;
@@ -243,38 +238,44 @@ module.exports = class GameController
 
 		// Ends the game, optionally forcing a winner
 		function endGame(winner) {
-			game.finishGame(winner);
-			var black = game.playerBlack;
-			var white = game.playerWhite;
+			// Update player skills before finishing game, as player stats may have changed
+			AccountController.getPlayerSkills(game.playerBlack.player, game.playerWhite.player, db, function(u1skill, u2skill) {
+				game.playerBlack.skill = u1skill || game.playerBlack.skill;
+				game.playerWhite.skill = u2skill || game.playerWhite.skill;
 
-			// If the game has a lobby, tell the winner to re-connect
-			if (black.score > white.score && gameConnections[gameId]) {
-				let ws = gameConnections[gameId][0];
-				if (ws && ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({lobby: game.lobby}));
-			} else if (gameConnections[gameId]) {
-				let ws = gameConnections[gameId][1];
-				if (ws && ws.readyState === WebSocket.OPEN)
-					gameConnections[gameId][1].send(JSON.stringify({lobby: game.lobby}));
-			}
+				game.finishGame(winner);
+				var black = game.playerBlack;
+				var white = game.playerWhite;
 
-			// Send the game over message
-			pushUpdate({nextTurn: null, done: {black: black, white: white}});
-
-			// Wait a second and then close the connections. We were having an issue where sometimes the connection would
-			// be closed before the pushUpdate finished
-			setTimeout(function() {
-				for (var ws of gameConnections[gameId]) {
-					if (ws)
-						ws.close(undefined, 'Game Over');
+				// If the game has a lobby, tell the winner to re-connect
+				if (black.score > white.score && gameConnections[gameId]) {
+					let ws = gameConnections[gameId][0];
+					if (ws && ws.readyState === WebSocket.OPEN)
+						ws.send(JSON.stringify({lobby: game.lobby}));
+				} else if (gameConnections[gameId]) {
+					let ws = gameConnections[gameId][1];
+					if (ws && ws.readyState === WebSocket.OPEN)
+						gameConnections[gameId][1].send(JSON.stringify({lobby: game.lobby}));
 				}
-			}, 2000);
 
-			// Update accounts with game results
-			if (!game.playerBlack.isAI && !game.playerWhite.isAI) {
-				AccountController.updateAccountFromPlayer(game.playerBlack, db);
-				AccountController.updateAccountFromPlayer(game.playerWhite, db);
-			}
+				// Send the game over message
+				pushUpdate({nextTurn: null, done: {black: black, white: white}});
+
+				// Wait a second and then close the connections. We were having an issue where sometimes the connection would
+				// be closed before the pushUpdate finished
+				setTimeout(function() {
+					for (var ws of gameConnections[gameId]) {
+						if (ws)
+							ws.close(undefined, 'Game Over');
+					}
+				}, 2000);
+
+				// Update accounts with game results
+				if (!game.playerBlack.isAI && !game.playerWhite.isAI) {
+					AccountController.updateAccountFromPlayer(game.playerBlack, db);
+					AccountController.updateAccountFromPlayer(game.playerWhite, db);
+				}
+			});
 		}
 
 		ws.on('message', function(message) {

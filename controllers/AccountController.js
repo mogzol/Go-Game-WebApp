@@ -110,22 +110,26 @@ module.exports = class AccountController
 		});
 	}
 
-	static getPlayerSkill(username, db, cb)
+	static getPlayerSkills(user1, user2, db, cb)
 	{
 		var users = db.collection(userDB);
 
-		users.find({_username: username}, function(err, results) {
-			if (err) {
-				console.log(err);
-				return;
-			} else if (results.length < 1) {
-				console.log('Unable to find user ' + player.player + ' in the database, can\'t get skill!');
-				return;
+		users.find({_username: {$in: [user1, user2]}}, function(err, results) {
+			// Create an account from the first user (there should only be 1 user)
+			var u1skill, u2skill;
+			if (results[0] && results[0]._username === user1) {
+				u1skill = results[0]._userSkillLevel;
+			} else if (results[1] && results[1]._username === user1) {
+				u1skill = results[1]._userSkillLevel;
 			}
 
-			// Create an account from the first user (there should only be 1 user)
-			var account = new Account(results[0]);
-			cb(account.userSkillLevel);
+			if (results[0] && results[0]._username === user2) {
+				u2skill = results[0]._userSkillLevel;
+			} else if (results[1] && results[1]._username === user2) {
+				u2skill = results[1]._userSkillLevel;
+			}
+
+			cb(u1skill, u2skill);
 		});
 	}
 };
