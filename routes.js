@@ -22,6 +22,8 @@ module.exports = {
 	lobbies: '/lobbies',
 	createLobby: '/lobbies/create',
 	joinLobby: '/lobbies/lobby/:lobby',
+	
+	rules: '/rules',
 
 	admin: '/admin',
 	adminCreateAccount: '/admin/createAccount',

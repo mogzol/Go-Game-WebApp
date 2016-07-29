@@ -37,6 +37,7 @@
 						<li {% if url == routes.quickGame %}class="active"{% endif %}><a href="{{ routes.quickGame }}">Quick Game</a></li>
 						<li {% if url == routes.lobbies %}class="active"{% endif %}><a href="{{ routes.lobbies }}">Lobbies</a></li>
 						<li {% if url == routes.admin %}class="active"{% endif %}><a href="{{ routes.admin }}">Admin Zone</a></li>
+						<li {% if url == routes.rules %}class="active"{% endif %}><a href="{{ routes.rules }}">Rules</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						{% if session.username %}

@@ -259,6 +259,11 @@ app.ws(routes.joinGame, hasParams, function (ws, request) {
 });
 
 
+
+app.get(routes.rules, function(request, response) {
+	response.render('views/rules.html.njk');
+});
+
 /*
  * -------- ERROR HANDLING
  */
