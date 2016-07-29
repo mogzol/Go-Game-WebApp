@@ -139,3 +139,15 @@ td:hover span.ban {
 	margin-top: 0;
 	margin-bottom:20px;
 }
+
+.title {
+	font-size:5em;
+	padding-bottom: 40px;
+}
+
+#one,
+#two,
+#three,
+#four {
+	opacity: 0;
+}
