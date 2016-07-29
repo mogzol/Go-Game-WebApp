@@ -174,9 +174,12 @@ module.exports = class Game{
 				console.log("[isValid] Attacking controlled liberty");
 				this._captured = true;
 				return true;
+			}else if(this.isEmpty(vertex)){
+				console.log("[isValid] Taunting controlled liberty");
+				return true;
 			}
 		}
-		else             //Can get rid of this case, leaving just in case required for territory counting
+		else
 		{
 			console.log("[isValid] ______LAST IF CASE______");
 			return 'BLEEP BLOOP';
@@ -199,7 +202,7 @@ module.exports = class Game{
 
 		if(playerMove.next.V === vertex){
 			this._Graph[vertex][4] = 0;
-			//console.log('Can not make a same move as last one');
+			console.log('Can not make a same move as last one');
 			return false;
 		}
 		for(var dir = 0; dir < 4; dir++)
@@ -207,13 +210,14 @@ module.exports = class Game{
 			if(this._captured && this._Graph[vertex][dir] != -1 && boardMove.next.V === this._Graph[vertex][dir])
 			{
 				this._Graph[vertex][4] = 0;
-				//console.log('Can not make a recursive move');
+				console.log('Can not make a recursive move');
 				return false;
 			}
 			else if(this._Graph[vertex][dir] != -1 && this.isOwner(this._Graph[vertex][dir],color) === 4 )
 			{
 				this._Graph[vertex][4] = 0;
 				this._Graph[vertex][5] = 0;
+				this._captured = true;
 				return true;
 			}
 		}
@@ -281,8 +285,8 @@ module.exports = class Game{
 			this._Graph[vertex][4] = color;
 			//console.log("[makeMove] Before updateGraph");
 			this.updateGraph(vertex, color);
-			//console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
-			//console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
+			console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
+			console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
 
 			if(this._que.length > 0)
 			{
@@ -304,16 +308,16 @@ module.exports = class Game{
 						x = Math.floor(captured / this._size);
 						y = captured % this._size;
 					}
-					//console.log("[makeMove] que is not empty and territories have been captured!");
-					//console.log("[makeMove] captured is :"+captured);
+					console.log("[makeMove] que is not empty and territories have been captured!");
+					console.log("[makeMove] captured is :"+captured);
 					this._Graph[captured][6] = 0;
-					this._Graph[captured][5] = color;
+					this._Graph[captured][5] = 0;//color;
 					this._Graph[captured][4] = 0;
 					this._board[x][y] = 0;
 					this._turn.captured += 1;
 					this._captured = true;
 				}
-				//console.log("[makeMove] Printing graph_____________________________________: "+'\n'+this.printGraph());
+				console.log("[makeMove] Printing graph after territories: "+'\n'+this.printGraph());
 			}
 			this._turn.playerHistory = move;
 			this._boardHistory.push(move);
@@ -339,7 +343,7 @@ module.exports = class Game{
 			if (this._Graph[vertex][dir] != -1) {
 				//console.log("[updateGraph] pushing adjacent node onto stack: " + this._Graph[vertex][dir]);             //Use to be 2
 				if(this._Graph[this._Graph[vertex][dir]][4] === (3^color) && !this.isEmpty(this._Graph[vertex][dir])) {
-					//console.log("[updateGraph] pushing :"+this._Graph[vertex][dir]+": onto que");
+					console.log("[updateGraph] pushing :"+this._Graph[vertex][dir]+": onto que");
 					this._que.push(this._Graph[vertex][dir]);
 				}
 				stack.push(this._Graph[vertex][dir]);
@@ -352,10 +356,11 @@ module.exports = class Game{
 			var own = this.isOwner(adjacent, color);
 
 			if (this._Graph[adjacent][4] != color && own === 4) {
-				//console.log("[updateGraph] fully owned adjacent node off stack is: " + adjacent);
+				console.log("[updateGraph] fully owned adjacent node off stack is: " + adjacent);
 				this._Graph[adjacent][4] = 0;
 				this._Graph[adjacent][5] = color;
 				this._board[Math.floor(adjacent / this._size)][adjacent % this._size] = 0;
+				this._que.pop();
 			}
 		}
 	}
@@ -369,7 +374,7 @@ module.exports = class Game{
 	 */
 	territory(v,color, x, y)
 	{
-		//console.log("[territory] vertex is:"+v);
+		console.log("[territory] vertex is:"+v);
 
 		this._Graph[v][6] = 1;
 		var owns = this.isOwner(v, color);
@@ -379,7 +384,7 @@ module.exports = class Game{
 
 		if(this.isEmpty(v) && !this._start)
 		{
-			//console.log("hit is empty base case");
+			console.log("hit is empty base case");
 			this._Graph[v][6] = 0;
 			this._que = [];
 			this._start = true;
