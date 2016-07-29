@@ -185,7 +185,7 @@ module.exports = class LobbyController {
 		});
 	}
 
-	static wsAction(ws, request)
+	static wsAction(ws, request, db)
 	{
 		var id = request.params.lobby;
 		var lobby = lobbies[id];
@@ -310,7 +310,7 @@ module.exports = class LobbyController {
 				}
 
 				for (var group of groups) {
-					var game = GameController.generateLobbyGame(group[0], group[1], size, id);
+					var game = GameController.generateLobbyGame(group[0], group[1], size, id, db);
 
 					// If ID is false, then the size or AI is invalid
 					if (game === false) {

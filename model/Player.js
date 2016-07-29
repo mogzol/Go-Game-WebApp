@@ -17,7 +17,7 @@ module.exports= class Player{
 	    this._aiMode = load ? name._aiMode : aiMode || null; // The AI mode
         this._score = load ? name._score : 0;                //Player Score
         this._captured = load ? name._captured : 0;             //Amount of armies captured
-        this._gameResult = load ? name._gameResult : -1;          //Win or Loss
+        this._gameResult = load ? name._gameResult : -1;          //Win or Loss (1 = win, 0 = loss)
         this._playerHistory = load ? name._playerHistory : [];       //Player's moves
         this._gameSkillLevel = load ? name._gameSkillLevel : 100;
 	    this._aiMode = aiMode;      //Player's Skill level

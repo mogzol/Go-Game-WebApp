@@ -46,6 +46,9 @@ module.exports = class Game{
 	 */
 	start() {
 		this._turn = this._playerBlack;
+
+		// Add white's handicap
+		this._playerWhite.score = 6.5;
 	}
 
 	/**
@@ -468,14 +471,6 @@ module.exports = class Game{
 		}
 		this._playerBlack.score -= this._playerBlack.captured;
 		this._playerWhite.score -= this._playerWhite.captured;
-
-		if(this._playerBlack.score > this._playerWhite.score) {
-			this._playerBlack.result = 1;
-			this._playerWhite.result = 0;
-		} else {
-			this._playerWhite.result = 1;
-			this._playerBlack.result = 0;
-		}
 	}
 
 	/**
@@ -499,10 +494,15 @@ module.exports = class Game{
 		var totalGameTime = this._playerWhite.playTime + this._playerBlack.playTime;
 		this._turn = null;
 
-		if (this._playerBlack.score > this._playerWhite.score)
+		if (this._playerBlack.score > this._playerWhite.score) {
 			this._winner = this._playerBlack;
-		else
+			this._playerBlack.result = 1;
+			this._playerWhite.result = 0;
+		} else {
 			this._winner = this._playerWhite;
+			this._playerBlack.result = 0;
+			this._playerWhite.result = 1;
+		}
 
 		if(!this._playerBlack.isAI && !this._playerWhite.isAI) {
 			this.calculateRating();

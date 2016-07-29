@@ -145,9 +145,18 @@ td:hover span.ban {
 	padding-bottom: 40px;
 }
 
+.title .go,
+.title .name {
+	font-weight: bold;
+}
+
 #one,
 #two,
 #three,
 #four {
 	opacity: 0;
+}
+
+.rules p {
+	font-size: 1.5em;
 }
