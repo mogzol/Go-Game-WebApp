@@ -1,5 +1,10 @@
 "use strict";
 
+/*
+ * This is an alternate game class made I (Morgan) made since I was bored and wanted to try making one. To use this
+ * just rename the current game class to something like Game_old.js and rename this one to Game.js
+ */
+
 var Player = require('./Player.js');
 
 module.exports = class Game{
@@ -27,10 +32,8 @@ module.exports = class Game{
 		this._playerWhite = load ? new Player(playerOne._playerWhite) : playerTwo;
 		this._turn = load ? playerOne._turn : null;
 		this._board = load ? playerOne._board : this.createBoard(size);
-		this._boardSize = load ? playerOne._boardSize : size*size;
 		this._size = load ? playerOne._size : size;
 		this._boardHistory = load ? playerOne._boardHistory : [];
-		this._Graph = load ? playerOne._Graph : this.createGraph();
 		this._lobby = load ? playerOne._lobby : lobby;
 		this._passes = load ? playerOne._passes : 0;
 		this._startTime = load ? playerOne._startTime : Date.now();
@@ -75,412 +78,191 @@ module.exports = class Game{
 		return board;
 	}
 
-	/**                    vertex -> [Left, Right, Up, Down, Owner, Controlled by]
-	 *                          (dir)  0      1    2     3     4       5
-	 *
-	 * B=   [0,1,0]      Graph= 0 ->    [-1,   1,   -1,   3,   0,   1(BLACK)],
-	 *      [1,2,0]             1 ->    [0,    2,   -1,   4,   1,  -1],
-	 *      [2,0,2]             2 ->    [1,   -1,   -1,   5,   0,  -1],
-	 *                          3 ->    [-1,   4,    0,   6,   1,  -1],
-	 * v=   [0,1,2]             4 ->    [3,    5,    1,   7,   2,  -1],
-	 *      [3,4,5]             5 ->    [4,   -1,    2,   8,   0,  -1],
-	 *      [6,7,8]             6 ->    [-1,   7,    3,  -1,   2,  -1],
-	 *                          7 ->    [6,    8,    4,  -1,   0,  2(WHITE)],
-	 *                          8 ->    [7,   -1,    5,  -1,   2,  -1]
-	 *
-	 *  Vertex      = (Row * board.size) + col
-	 *  Vertex_left = Vertex - 1
-	 *  Vertex_right= Vertex + 1
-	 *  Vertex_Up   = Vertex - board.size
-	 *  Vertex_Down = Vertex + board.size
-	 */
-	createGraph()
+	getLiberties(x, y, visited)
 	{
+		var liberties = 0;
+		var color = this.board[y][x];
 
-		var G = new Array(this._boardSize);
-		for(var v = 0; v < this._boardSize; v++)
-		{
-			G[v] = new Array(6);
-			for(var dir = 0; dir < 7; dir++)
-			{
-				switch(dir){
-					case 0:
-						if((this._boardSize - v) % this._size === 0)    //at left most vertex on board
-							G[v][dir] = -1;
-						else
-							G[v][dir] = v-1;
-						break;
-					case 1:
-						if((v+1) % this._size === 0)                    //at right most vertex on board
-							G[v][dir] = -1;
-						else
-							G[v][dir] = v+1;
-						break;
-					case 2:
-						if(v < this._size)                              //at the first row of vertex's
-							G[v][dir] = -1;
-						else
-							G[v][dir] = v - this._size;
-						break;
-					case 3:
-						if(v >= this._boardSize - this._size)           //at the last row of vertex's
-							G[v][dir] = -1;
-						else
-							G[v][dir] = v + this._size;
-						break;
-					case 4:
-						G[v][dir] = 0;                                  //empty vertex
-						break;
-					case 5:
-						G[v][dir] = 0;                                 //No one controls vertex
-						break;
-					case 6:
-						G[v][dir] = 0;
-						break;
-				}
-			}
+		// Check up, right, down, left
+		for (var dir of [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]]) {
+			let x = dir[0], y = dir[1], visitedIndex = y * this.size + x;
+			if (y < 0 || y >= this.size || x < 0 || x >= this.size || visited[visitedIndex])
+				continue;
+
+			visited[visitedIndex] = true;
+			var boardVal = this.board[y][x];
+			if (boardVal === 0)
+				liberties++;
+			else if (boardVal === color)
+				liberties += this.getLiberties(x, y, visited);
 		}
-		return G;
+
+		return liberties;
 	}
 
-	/**
-	 * isValid( r, c, color) checks if move is allowed. Returns True or an error message string
-	 */
-	isValid(r, c, color) {
-		if (!Number.isInteger(r) || !Number.isInteger(c) || !Number.isInteger(color))
-			return 'Invalid input';
+	removeArmy(x, y, dontReturn) {
+		var color = this.board[y][x];
 
-		var vertex = (r * this._size) + c;
+		// Delete this token
+		this.board[y][x] = 0;
 
-		if(this._Graph[vertex][4] === 0 && this._Graph[vertex][5] === 0)
-		{
-			console.log("[isValid] Fist if case");
-			this._Graph[vertex][5] = 0;
-			return true;
-		}
-		else if(this._Graph[vertex][4] !== 0)
-		{
-			console.log("[isValid] Already owned, make new move");
-			return 'Already owned, make new move';
-		}
-		else if(this._Graph[vertex][5] === color)
-		{
-			console.log("[isValid] Secure your already controlled liberty");
-			return true;
-		}
-		else if(this._Graph[vertex][5] === (3^color))
-		{
-			if(this.canAttack(vertex,color)) {
-				console.log("[isValid] Attacking controlled liberty");
-				this._captured = true;
-				return true;
-			} else if(this.isEmpty(vertex)) {
-				console.log("[isValid] Taunting controlled liberty");
-				return true;
+		// Add 1 to current turn's captured
+		this.turn.captured++;
+
+		// If this is the only piece we remove, return coords as string
+		var returnVal = dontReturn ? true : (x + ":" + y);
+
+		// Check up, right, down, left
+		for (var dir of [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]]) {
+			let x = dir[0], y = dir[1];
+			if (y < 0 || y >= this.size || x < 0 || x >= this.size)
+				continue;
+
+			if (this.board[y][x] === color) {
+				// If we remove more than 1, just return true
+				returnVal = true;
+				this.removeArmy(x, y, true);
 			}
+		}
 
-			return 'Invalid move';
-		}
-		else
-		{
-			console.log("[isValid] ______LAST IF CASE______");
-			return 'BLEEP BLOOP';
-		}
+		return returnVal
 	}
 
-	/**
-	 * Checks all adjacent nodes from vertex
-	 * @param vertex -> parent vertex
-	 * @param lastMove -> last move made on board
-	 * @param color -> opponent
-	 * @returns {boolean} -> if player is able to make an attack on the opponent
-	 */
-	canAttack(vertex,color)
-	{
-		var moves = this._turn.playerHistory;
-		var playerMove = moves.pop();
-		var boardMove = this.lastMove;
-		this._Graph[vertex][4] = color;
-
-		if(playerMove.next.V === vertex){
-			this._Graph[vertex][4] = 0;
-			console.log('Can not make a same move as last one');
-			moves.push(playerMove);
-			return false;
-		}
-		for(var dir = 0; dir < 4; dir++)
-		{
-			if(this._captured && this._Graph[vertex][dir] != -1 && boardMove.next.V === this._Graph[vertex][dir])
-			{
-				this._Graph[vertex][4] = 0;
-				console.log('Can not make a recursive move');
-				moves.push(playerMove);
-				return false;
-			}
-			else if(this._Graph[vertex][dir] != -1 && this.isOwner(this._Graph[vertex][dir],color) === 4 )
-			{
-				this._Graph[vertex][4] = 0;
-				this._Graph[vertex][5] = 0;
-				this._captured = true;
-				return true;
-			}
-		}
-		this._Graph[vertex][4] = 0;
-		moves.push(playerMove);
-		return false;
-	}
-	/**
-	 * Checks if color controls vertex by checking all adjacent nodes
-	 * neg and pos are used to in order to insure that all adjacent nodes are owned by color
-	 *      -> neg represents out of bounds (boarders)
-	 *      -> pos represent adjacent vertexes
-	 *      -> If both add up to 4, that means all adjacent vertexes are owned
-	 *
-	 * @param vertex ->  parent vertex
-	 * @param color ->   player
-	 * @returns {int} True if player has surrounded the vertex
-	 */
-	isOwner(vertex,color)
-	{
-		var adjacent;
-		var neg = 0;
-		var pos = 0;
-		for(var dir = 0; dir < 4; dir++)
-		{
-			//console.log("[isOwner] Checking adjacent nodes of :"+this._Graph[vertex][dir]);
-			if(this._Graph[vertex][dir] != -1) {
-				adjacent = this._Graph[vertex][dir];
-				if(this._Graph[adjacent][4] === color)
-					pos += 1;
-			}
-			else
-				neg +=1;
-		}
-		//console.log("[isOwner] neg and pos are: ["+neg+","+pos+"] and add up to: "+(neg+pos));
-		return (neg + pos);
-	}
 	/**
 	 * Make move
-	 * @param c coordinate for colm
-	 * @param r coordinate for row
+	 * @param x coordinate for colm
+	 * @param y coordinate for row
 	 * @param player is the player making the move
 	 * @return {Boolean|String} returns true if move was made or an error string if it was not
 	 */
-	makeMove(c, r, player)
+	makeMove(x, y, player)
 	{
 		if (player.color !== this.turn.color) {
 			return 'It is not that player\'s turn';
 		}
 
 		var color = this.turn.color;
-		var vertex = (r * this._size) + c;
-		var valid = this.isValid(r,c,color);
-		if( valid === true )
-		{
-			var move = {
-				player: color,
-				oldBoard: this._board,
-				next: {
-					V: vertex,
-					row: r,
-					col: c
-				}
-			};
-			this._board[r][c] = color;
-			this._Graph[vertex][4] = color;
-			//console.log("[makeMove] Before updateGraph");
-			this.updateGraph(vertex, color);
-			//console.log("[makeMove] Printing graph: "+'\n'+this.printGraph());
-			//console.log("[makeMove] Printing board: "+'\n'+this._board.join('\n'));
 
-			if(this._que.length > 0)
-			{
-				var start = this._que.pop();
-				this._start = true;
-				var x = Math.floor(start / this._size);
-				var y = start % this._size;
-				if(this.territory(start, color, x, y)){
-					this._Graph[start][6] = 0;
-				}
-				while(this._que.length > 0)
-				{
-					var captured;
-					if(!this._start){
-						captured = start;
-						this._start = true;
-					}else{
-						captured = this._que.pop();
-						x = Math.floor(captured / this._size);
-						y = captured % this._size;
-					}
-					console.log("[makeMove] que is not empty and territories have been captured!");
-					console.log("[makeMove] captured is :"+captured);
-					this._Graph[captured][6] = 0;
-					this._Graph[captured][5] = 0;//color;
-					this._Graph[captured][4] = 0;
-					this._board[x][y] = 0;
-					this._turn.captured += 1;
-					this._captured = true;
-				}
-				//console.log("[makeMove] Printing graph after territories: "+'\n'+this.printGraph());
+		if (this.board[y][x] !== 0)
+			return "Space already taken";
+
+		// If only a single token was removed last turn, and we try to replace it, then we are putting the board in a
+		// previous state, which is not allowed
+		if (this.lastMove && this.lastMove.removedToken === x + ':' + y)
+			return "Move puts board into previous state";
+
+		var thisMove = {
+			removedToken: false,
+			next: { // Structured like this to keep compatibility with old Game class
+				row: y,
+				col: x,
 			}
-			this._turn.playerHistory = move;
-			this._boardHistory.push(move);
-			this.switchTurn();
-			return true;                                    //change to a kind of alert
-		} else {
-			return valid;
+		};
+
+		// Add the move to the board
+		this.board[y][x] = color;
+
+		// Check up, right, down, left
+		for (var dir of [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]]) {
+			let x = dir[0], y = dir[1];
+			if (y < 0 || y >= this.size || x < 0 || x >= this.size)
+				continue;
+
+			var boardVal = this.board[y][x];
+			if (boardVal !== 0 && boardVal !== color && this.getLiberties(x, y, new Array(this.size * this.size)) === 0) {
+				var removed = this.removeArmy(x, y); // True if multiple, or coord string like 'x:y' if single remove
+				if (thisMove.removedToken === false)
+					thisMove.removedToken = removed;
+				else
+					thisMove.removedToken = true; // We are removing multiple, so set to true
+			}
 		}
+
+		if (this.getLiberties(x, y, new Array(this.size * this.size)) === 0) {
+			this.board[y][x] = 0;
+			return "Suicide is not the answer";
+		}
+
+		this.boardHistory.push(thisMove);
+		this.switchTurn();
+		return true;
 	}
-	/**
-	 * Update graph according to move made on vertex by color
-	 * @param vertex -> where the move is taking place
-	 * @param color -> who is making the move
-	 */
-	updateGraph(vertex,color)
+
+	getOwnedBy(x, y, visited)
 	{
-		this._captured = false;
-		var adjacent;
-		var stack = [];
+		var ownedBy = 0;
 
-		for (var dir = 0; dir < 4; dir++)
-		{
-			if (this._Graph[vertex][dir] != -1) {
-				//console.log("[updateGraph] pushing adjacent node onto stack: " + this._Graph[vertex][dir]);             //Use to be 2
-				if(this._Graph[this._Graph[vertex][dir]][4] === (3^color) && !this.isEmpty(this._Graph[vertex][dir])) {
-					console.log("[updateGraph] pushing :"+this._Graph[vertex][dir]+": onto que");
-					this._que.push(this._Graph[vertex][dir]);
+		// Check up, right, down, left
+		for (var dir of [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]]) {
+			let x = dir[0], y = dir[1], visitedIndex = y * this.size + x;
+			if (y < 0 || y >= this.size || x < 0 || x >= this.size || visited[visitedIndex])
+				continue;
+
+			visited[visitedIndex] = true;
+			var boardVal = this.board[y][x];
+			var thisOwnedBy;
+
+			if (boardVal === 0) {
+				thisOwnedBy = this.getOwnedBy(x, y, visited);
+				if (thisOwnedBy === null) {
+					return null;
 				}
-				stack.push(this._Graph[vertex][dir]);
+			} else {
+				thisOwnedBy = boardVal;
+			}
+
+			if (thisOwnedBy !== 0) {
+				if (ownedBy === 0) {
+					ownedBy = thisOwnedBy;
+				} else if (ownedBy !== thisOwnedBy) {
+					return null;
+				}
 			}
 		}
 
-		while (stack.length > 0)
-		{
-			adjacent = stack.pop();
-			var own = this.isOwner(adjacent, color);
-
-			if (this._Graph[adjacent][4] != color && own === 4) {
-				console.log("[updateGraph] fully owned adjacent node off stack is: " + adjacent);
-				this._Graph[adjacent][4] = 0;
-				this._Graph[adjacent][5] = color;
-				this._board[Math.floor(adjacent / this._size)][adjacent % this._size] = 0;
-				this._que.pop();
-			}
-		}
+		return ownedBy ;
 	}
 
-	/**
-	 * Implement method for territory tracking...
-	 * @param v
-	 * @param dir
-	 * @param color
-	 * @returns {boolean} Can keep going, Return false if dead end. (base case)
-	 */
-	territory(v,color, x, y)
+	fill(x, y, color)
 	{
-		console.log("[territory] vertex is:"+v);
+		this.board[y][x] = color;
+		for (var dir of [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]]) {
+			let x = dir[0], y = dir[1];
+			if (y < 0 || y >= this.size || x < 0 || x >= this.size)
+				continue;
 
-		this._Graph[v][6] = 1;
-		var owns = this.isOwner(v, color);
-
-		//console.log("[territory] owns is: "+owns);
-
-
-		if(this.isEmpty(v) && !this._start)
-		{
-			console.log("hit is empty base case");
-			this._Graph[v][6] = 0;
-			this._que = [];
-			this._start = true;
-			return true;
-		}
-		//Base case
-		//console.log("que length is :"+this._que.length);
-		if(owns === 3 && !this._start){
-			//console.log("  [territory] pushing onto que :"+v+", with length"+this._que.length);
-			this._que.push(v);
-			return false;
-		}
-		else if(this.deadEnd(v, color))
-		{
-			this._que.push(v);
-			//console.log("hit second base case checking inside territory");
-			return false;
-		}
-		if(owns <= 3) {
-			this._start = false;
-			//Move left
-			console.log("[territory] moving left, with [x,y-1] : [" + x + "," + (y - 1) + "]  with color of :" + color+" and vertex : "+v);
-			if (((y - 1) >= 0) && (this._Graph[this._Graph[v][0]][6] === 0) && (this._board[x][y - 1] === (3^color)) && this.territory(this._Graph[v][0], color, x, y - 1)) {
-				this._Graph[v][6] = 0;
-				return true;
+			if (this.board[y][x] === 0) {
+				this.fill(x, y, color);
 			}
-			//Move right
-			console.log("[territory] moving right, with [x,y+1] : [" + x + "," + (y + 1) + "] with color of :" + color+" and vertex : "+v);
-			if (y + 1 < this._size && this._Graph[this._Graph[v][1]][6] === 0 && this._board[x][y + 1] === (3^color) && this.territory(this._Graph[v][1], color, x, y + 1)) {
-				this._Graph[v][6] = 0;
-				return true;
-			}
-			//Move Up
-			console.log("[territory] moving up, with [x-1, y] : [" + (x - 1) + "," + y + "]  with color of :" + color+" and vertex : "+v);
-			if (x - 1 >= 0 && this._Graph[this._Graph[v][2]][6] === 0 && this._board[x - 1][y] === (3^color) && this.territory(this._Graph[v][2], color, x - 1, y)) {
-				this._Graph[v][6] = 0;
-				return true;
-			}
-			//Move Down
-			console.log("[territory] moving down, with [x+1, y] : [" + (x + 1) + "," + y + "]  with color of :" + color+" and vertex : "+v);
-			if (x + 1 < this._size && this._Graph[this._Graph[v][3]][6] === 0 && this._board[x + 1][y] === (3^color) && this.territory(this._Graph[v][3], color, x + 1, y)) {
-				this._Graph[v][6] = 0;
-				return true;
-			}
-			if(this._que.length > 0)
-				this._que.push(v);
 		}
-		this._Graph[v][6] = 0;
-		return false;
 	}
-	isEmpty(v)
-	{
-		for (var dir = 0; dir < 4; dir++) {
-			if (this._Graph[v][dir] != -1 && this._Graph[this._Graph[v][dir]][4] === 0)
-				return true;
-		}
-		return false;
-	}
-	deadEnd(v, color)
-	{
-		var visited =0;
-		for (var dir = 0; dir < 4; dir++) {
-			if (this._Graph[v][dir] != -1){
-				if(this._Graph[this._Graph[v][dir]][6] === 1 || this._Graph[this._Graph[v][dir]][4] === color)
-					visited += 1;
-			}
-		}
-		return visited === 4;
-	}
+
 	/**
 	 *Calculates the score and assigns them to players
 	 * This method goes down along the last 2 col in graph, each vertex owned or controlled is 1 point
 	 */
 	calScore()
 	{
+		for (var y = 0; y < this.size; y++) {
+			for (var x = 0; x < this.size; x++) {
+				if (this.board[y][x] === 0) {
+					var ownedBy = this.getOwnedBy(x, y, new Array(this.size * this.size));
 
-		for(var v = 0; v < this._boardSize; v++)
-		{
-			if(this._Graph[v][4] === 1)
-				this._playerBlack.score += 1;
-			else if(this._Graph[v][4] === 2)
-				this._playerWhite.score += 1;
-			else {
-				if (this._Graph[v][5] === 1)
-					this._playerBlack.score += 1;
-				else if (this._Graph[v][5] === 2)
-					this._playerWhite.score += 1;
+					// If contested, fills with null so we don't check it again
+					this.fill(x, y, ownedBy);
+				}
+
+				var boardVal = this.board[y][x];
+				if (boardVal === 1) {
+					this.playerBlack.score++;
+				} else if (boardVal === 2) {
+					this.playerWhite.score++;
+				}
 			}
 		}
-		this._playerBlack.score -= this._playerBlack.captured;
-		this._playerWhite.score -= this._playerWhite.captured;
+
+		this.playerBlack.score += this.playerBlack.captured;
+		this.playerWhite.score += this.playerWhite.captured;
 	}
 
 	/**
@@ -493,14 +275,12 @@ module.exports = class Game{
 	 */
 	finishGame(winner) {
 		this.calScore();
-		this._endTime = Date.now();
 
 		if (winner === 'black')
 			this._playerWhite.score = 0;
 		else if (winner === 'white')
 			this._playerBlack.score = 0;
 
-		var totalGameTime = this._playerWhite.playTime + this._playerBlack.playTime;
 		this._turn = null;
 
 		if (this._playerBlack.score > this._playerWhite.score) {
@@ -516,13 +296,8 @@ module.exports = class Game{
 		if (!this._playerBlack.isAI && !this._playerWhite.isAI) {
 			this.calculateRating();
 		}
-		else if (this._playerBlack.isAi) {
-			this._playerWhite.score = this._playerWhite.score;
-		}
-		else {
-			this._playerBlack.score = this._playerBlack.score;
-		}
 	}
+
 	/**
 	 * Calculates a rating based off an elo scoring system found here:
 	 * https://en.wikipedia.org/wiki/Go_ranks_and_ratings
@@ -613,26 +388,6 @@ module.exports = class Game{
 		return this._boardHistory[this._boardHistory.length - 1];
 	}
 
-	get whiteTaken()
-	{
-		return this._whiteTaken;
-	}
-
-	get blackTaken()
-	{
-		return this._blackTaken;
-	}
-
-	get graph()
-	{
-		return this._Graph;
-	}
-
-	get boardSize()
-	{
-		return this._boardSize;
-	}
-
 	get size()
 	{
 		return this._size;
@@ -668,33 +423,5 @@ module.exports = class Game{
 
 	get endTime() {
 		return this._endTime;
-	}
-
-	/**
-	 * Prints out the games graph
-	 * @returns {string}
-	 */
-	printGraph()
-	{
-		var str='';
-		for(var v = 0; v< this._boardSize; v++)
-		{
-			str+=   v+' ->\t[';
-			for(var u = 0; u < 7; u++)
-			{
-				if(u == 4) {
-					if(str.length < 15+(v*24))
-						str += '  : ' + this._Graph[v][u];
-					else
-						str += ' : ' + this._Graph[v][u];
-				}
-				else
-					str += this._Graph[v][u];
-				if(u < 6 && u != 3)
-					str += ',';
-			}
-			str += ']\n';
-		}
-		return str;
 	}
 };
