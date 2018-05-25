@@ -264,9 +264,11 @@ module.exports = class GameController
 				// Wait a second and then close the connections. We were having an issue where sometimes the connection would
 				// be closed before the pushUpdate finished
 				setTimeout(function() {
-					for (var ws of gameConnections[gameId]) {
-						if (ws)
-							ws.close(undefined, 'Game Over');
+					if (gameConnections[gameId]) {
+						for (var ws of gameConnections[gameId]) {
+							if (ws)
+								ws.close(undefined, 'Game Over');
+						}
 					}
 				}, 2000);
 
