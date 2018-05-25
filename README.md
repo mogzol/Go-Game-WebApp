@@ -8,7 +8,7 @@ SourceTree is a nice GUI for Git if you don't want to use the command line: http
 
 Note that we use Nunjucks as our templating engine, which has a syntax similar to Twig (and Jinja), so if your editor supports Twig, make sure you set it to treat `njk` files as `twig` files. In JetBrains IDEs, this can be set in **File** > **Settings** > **Editor** > **File Types** and then find **Twig** in the list and add `*.njk` to the registered patterns. If your editor does not support twig (or Jinja), then just treat `njk` files as `html` files.
 
-To begin setting up your dev environment, clone the repo to your machine: `https://github.com/SENG-299-Group-6-Summer16/Go-WebApp.git`
+To begin setting up your dev environment, clone the repo to your machine: `https://github.com/mogzol/Go-Game-WebApp.git`
 
 Now run `npm install` from the project directory, which will download and install all the dependencies specified in `package.json`
 
