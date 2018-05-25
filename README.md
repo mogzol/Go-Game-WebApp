@@ -1,7 +1,11 @@
 # Go Web Application
 Go Web Application for UVIC SENG 299
 
-### Setting Up the Dev Environment
+## Running with Docker
+
+If you just want to run this project, a docker-compose file has been provided to get you up and running quickly and easily. Just make sure you have Docker installed on your machine, and then run `docker-compose up app` from the root of this repo. It will take a little bit to download all the node modules, but eventually you should see a message that says 'Listening on port 10050'. Just navigate to <localhost:10050> and you should see the site.
+
+## Setting Up the Dev Environment
 JetBrains IntelliJ (or WebStorm) is recommended for development. You can sign up for a student license for free: https://www.jetbrains.com/student/
 
 SourceTree is a nice GUI for Git if you don't want to use the command line: https://www.sourcetreeapp.com/
@@ -14,7 +18,11 @@ Now run `npm install` from the project directory, which will download and instal
 
 Next just make sure you have `mongod` running, and then start the server with `node server.js` (Node 6.2.2 or later is recommended).
 
-### Project Layout/Folder Structure
+### Important Note About the AI
+
+The AI server is no longer up, but the AI repo has been included as a submodule in this repo (the goai folder). You can run your own instance of the ai, just be sure to set the `GO_AI_HOST` and `GO_AI_PORT` environmental variables before starting the main app, so that it knows where to connect to the AI.
+
+## Project Layout/Folder Structure
 The `server.js` file is where the server is set up, and all the modules and routes are set up.
 
 The actual logic for the pages is handled by the controllers in the `controllers` folder. Controllers are auto-loaded, so after adding a new controller js file, it should just work without having to do anything in `server.js` (other than setting up the routes).
@@ -24,13 +32,13 @@ Nunjuck templates are basically just HTML with some extra features, you can read
 
 Any static content (such as javascript/css libraries) is located in the `public` folder.
 
-### Committing
+## Committing
 When committing **make sure** you don't commit any files that are not strictly part of this project, such as editor specific files (the JetBrains editor's `.idea` folder has already been added to the gitignore). Also make sure not to commit the `node_modules` folder (again, it has already been added to the gitignore, so it would be pretty hard to do this by accident).
 
 When writing commit messages, please follow the guidelines set here: http://chris.beams.io/posts/git-commit/  
 Really, please read that, it's worth it.
 
-### Code Formatting
+## Code Formatting
 Indent with tabs not spaces. Class and function declarations should have curly braces on a new line, unless they are being declared inline:
 
 ```javascript
@@ -58,7 +66,7 @@ while (condition)
 
 Finally, make sure to add a blank line at the end of every file, or else Git diffs will include an annoying 'no blank line' message.
 
-### Dependencies
+## Dependencies
 Here are the links to the pages for all the dependencies we are currently using, use them if you are unsure on how to use something.
 
 **auto-loader**: https://github.com/jwerle/node-auto-loader  

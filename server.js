@@ -44,7 +44,8 @@ env.addFilter('empty', function(object) { // Needed a way to check if an object 
 
 // Set up mongojs (like mongodb but cleaner code)
 var mongojs = require('mongojs');
-var db = mongojs('localhost:27017/GoPro');
+var dbAddr = process.env.GO_DB_ADDR || 'localhost:27017'
+var db = mongojs(dbAddr + '/GoPro');
 
 // Set up body-parser (for form data reading)
 var bodyParser = require('body-parser');
@@ -70,7 +71,7 @@ function requiresAdmin(url) {
 }
 
 // The port we will run on
-var port = 30092;
+var port = process.env.GO_PORT || 8080;
 
 
 /*

@@ -1,0 +1,3 @@
+[submodule "goai"]
+	path = goai
+	url = https://github.com/sdiemert/goai.git

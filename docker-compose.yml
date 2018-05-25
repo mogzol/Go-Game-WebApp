@@ -1,0 +1,31 @@
+version: "3"
+services:
+  app:
+    image: node
+    ports:
+      - 10050:10050
+    volumes:
+      - ./:/go_app
+    environment:
+      GO_DB_ADDR: "db:27017"
+      GO_PORT: "10050"
+      GO_AI_HOST: "ai"
+      GO_AI_PORT: "10051"
+    working_dir: /go_app
+    command: "sh -c 'npm install && node server.js'"
+    links:
+      - db
+      - ai
+
+  db:
+    image: mongo
+
+  ai:
+    image: node
+    volumes:
+      - ./goai:/go_ai
+    environment:
+      PORT: "10051"
+    working_dir: /go_ai
+    command: "sh -c 'npm install && node bin/www'"
+

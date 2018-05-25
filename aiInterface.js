@@ -2,11 +2,14 @@
 
 var http = require('http');
 
+const ai_host = process.env.GO_AI_HOST || 'roberts.seng.uvic.ca';
+const ai_port = process.env.GO_AI_PORT || '30000';
+
 function getRandomMove(size, board, lastMove, cb, errCb) {
 	var options = {
-		host: 'roberts.seng.uvic.ca',
+		host: ai_host,
 		path: '/ai/random',
-		port: '30000',
+		port: ai_port,
 		method: 'POST',
 		headers: {
 			"content-type": "application/json"
@@ -47,9 +50,9 @@ function getRandomMove(size, board, lastMove, cb, errCb) {
 
 function findMaxLibs(size, board, lastMove, cb, errCb) {
 	var options = {
-		host: 'roberts.seng.uvic.ca',
+		host: ai_host,
 		path: '/ai/maxLibs',
-		port: '30000',
+		port: ai_port,
 		method: 'POST',
 		headers: {
 			"content-type": "application/json"
@@ -90,9 +93,9 @@ function findMaxLibs(size, board, lastMove, cb, errCb) {
 
 function attackEnemy(size, board, lastMove, cb, errCb) {
 	var options = {
-		host: 'roberts.seng.uvic.ca',
+		host: ai_host,
 		path: '/ai/attackEnemy',
-		port: '30000',
+		port: ai_port,
 		method: 'POST',
 		headers: {
 			"content-type": "application/json"
@@ -133,9 +136,9 @@ function attackEnemy(size, board, lastMove, cb, errCb) {
 
 function formEyes(size, board, lastMove, cb, errCb) {
 	var options = {
-		host: 'roberts.seng.uvic.ca',
+		host: ai_host,
 		path: '/ai/formEyes',
-		port: '30000',
+		port: ai_port,
 		method: 'POST',
 		headers: {
 			"content-type": "application/json"
