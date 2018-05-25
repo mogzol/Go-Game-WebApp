@@ -3,7 +3,13 @@ Go Web Application for UVIC SENG 299
 
 ## Running with Docker
 
-If you just want to run this project, a docker-compose file has been provided to get you up and running quickly and easily. Just make sure you have Docker installed on your machine, and then run `docker-compose up app` from the root of this repo. It will take a little bit to download all the node modules, but eventually you should see a message that says 'Listening on port 10050'. Just navigate to <localhost:10050> and you should see the site.
+If you just want to run this project, a docker-compose file has been provided to get you up and running quickly and easily. First clone this repo **with the submodule**:
+
+```
+git clone --recurse-submodules https://github.com/mogzol/Go-Game-WebApp.git
+```
+
+Next just make sure you have Docker installed on your machine, and then run `docker-compose up app` from the root of the repo. It will take a little bit to download all the node modules, but eventually you should see a message that says 'Listening on port 10050'. Just navigate to <localhost:10050> and you should see the site.
 
 ## Setting Up the Dev Environment
 JetBrains IntelliJ (or WebStorm) is recommended for development. You can sign up for a student license for free: https://www.jetbrains.com/student/
