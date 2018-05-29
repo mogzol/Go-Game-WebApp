@@ -1,5 +1,9 @@
 # Go Web Application
-Go Web Application for UVIC SENG 299. A live demo should be available at http://gogame.morganzolob.info/
+Go Web Application for UVIC SENG 299.
+
+## Live Demo
+
+A live demo of this app should be available at http://gogame.morganzolob.info/
 
 ## Running with Docker
 
