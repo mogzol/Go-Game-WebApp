@@ -17,7 +17,7 @@ var expressWs = require('express-ws')(app);
 // Set up session handler
 var session = require('express-session');
 app.use(session({
-	secret: 'NotSoSecretKey',
+	secret: process.env.GO_SECRET_KEY || 'NotSoSecretKey',
 	maxAge: 3600000, // 1 hour
 	resave: false,
 	saveUninitialized: false
@@ -101,6 +101,7 @@ app.use(function(request, response, next) {
 	env.addGlobal('flashes', request.flash());
 	env.addGlobal('routes', routes);
 	env.addGlobal('session', request.session);
+	env.addGlobal('wsProtocol', process.env.GO_USE_WSS === '1' ? 'wss' : 'ws');
 	next();
 });
 

@@ -1,5 +1,7 @@
 # Go Web Application
-Go Web Application for UVIC SENG 299.
+
+Go Web Application for UVIC SENG 299 by Morgan, Mycheal, Ben, and Brandon  
+Created Summer 2016, forked and modified further by Morgan, 2019
 
 ## Live Demo
 
@@ -13,9 +15,12 @@ If you just want to run this project, a docker-compose file has been provided to
 git clone --recurse-submodules https://github.com/mogzol/Go-Game-WebApp.git
 ```
 
-Next just make sure you have Docker installed on your machine, and then run `docker-compose up app` from the root of the repo. It will take a little bit to download all the node modules, but eventually you should see a message that says 'Listening on port 10050'. Just navigate to <localhost:10050> and you should see the site.
+Next you will want to make a copy of `app.env.dist` as `app.env` and modify the variables inside it to suit your needs.
+
+Now just make sure you have Docker installed on your machine, and then run `docker-compose up app` from the root of the repo. It will take a little bit to download all the node modules, but eventually you should see a message that says 'Listening on port 10050'. Just navigate to <localhost:10050> and you should see the site.
 
 ## Setting Up the Dev Environment
+
 JetBrains IntelliJ (or WebStorm) is recommended for development. You can sign up for a student license for free: https://www.jetbrains.com/student/
 
 SourceTree is a nice GUI for Git if you don't want to use the command line: https://www.sourcetreeapp.com/

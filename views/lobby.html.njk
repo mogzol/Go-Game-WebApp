@@ -212,7 +212,7 @@
 		$ai = $('#ai');
 		$startGame = $('#start_game');
 
-		var lobbySocket = new WebSocket('ws://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', id|urlencode) }}');
+		var lobbySocket = new WebSocket('{{ wsProtocol }}://' + window.location.host + '{{ routes.joinLobby|replace(':lobby', id|urlencode) }}');
 
 		lobbySocket.onmessage = function (event) {
 			var message = JSON.parse(event.data);

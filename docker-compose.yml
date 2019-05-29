@@ -11,6 +11,8 @@ services:
       GO_PORT: "10050"
       GO_AI_HOST: "ai"
       GO_AI_PORT: "10051"
+    env_file:
+      - 'app.env'
     working_dir: /go_app
     command: "sh -c 'npm install && node server.js'"
     links:

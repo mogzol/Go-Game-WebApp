@@ -210,7 +210,7 @@
 				{% set route = routes.joinGame|replace(':id', gameId|urlencode) %}
 			{% endif %}
 
-			var gameSocket = new WebSocket('ws://' + window.location.host + '{{ route }}');
+			var gameSocket = new WebSocket('{{ wsProtocol }}://' + window.location.host + '{{ route }}');
 
 			gameSocket.onmessage = function (event) {
 				var message = JSON.parse(event.data);
